@@ -1,3 +1,4 @@
+import { asNullableString as asText, asRecord } from './normalize'
 import { ApiError, getJson, requestJson } from './client'
 
 export type FindingReviewAction = 'confirm' | 'reject' | 'correct'
@@ -39,15 +40,6 @@ export class FindingReviewConflictError extends Error {
     this.name = 'FindingReviewConflictError'
     this.current = current
   }
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
-}
-
-function asText(value: unknown): string | null {
-  return typeof value === 'string' ? value : null
 }
 
 function normalizeEntry(value: unknown): FindingReviewEntry {

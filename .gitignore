@@ -71,7 +71,8 @@ ai-service/**/*.pth
 ai-service/**/*.onnx
 
 # ---------- Node / Frontend (frontend/) ----------
-frontend/node_modules/
+node_modules/
+.vite/
 frontend/dist/
 frontend/build/
 frontend/.next/
@@ -107,3 +108,10 @@ deploy/.env.prod
 deploy/.env.db
 # Cloudflare Origin Certificate and its private key (deploy/compose.cloudflare.yml)
 deploy/certs/
+
+# Local result dumps; keep test fixtures and documented reference outputs.
+/ocr-result.json
+/result_khoiluong.json
+/backend/result_*.json
+/ai1/test-runs/
+/ai-service/ocr-benchmark/pageinfo.txt

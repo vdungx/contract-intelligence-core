@@ -72,6 +72,7 @@ from contract_intelligence.shared.processed_events import (
     event_key,
     mark_processed,
 )
+from contract_intelligence.shared.utils import ensure_utc
 
 logger = structlog.get_logger(__name__)
 
@@ -137,11 +138,6 @@ def _presign_ttl_seconds(total_pages: int) -> int:
     floor = get_settings().kafka_presign_expires_seconds
     wanted = ai1_deadline_seconds(total_pages) + _PRESIGN_MARGIN_SECONDS
     return min(_S3_MAX_PRESIGN_SECONDS, max(floor, wanted))
-
-
-def _as_utc(value: datetime) -> datetime:
-    # SQLite hands back naive datetimes; every column is stored in UTC.
-    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
 
 
 def _task_id_from(document_id: str) -> int:
@@ -225,7 +221,7 @@ def _snapshot_created_at(run: PipelineRunORM) -> dict[str, str]:
         return {}
     recorded = _run_payload(run).get("ai1_snapshot_recorded_at")
     stamps = recorded if isinstance(recorded, dict) else {}
-    fallback = _as_utc(run.created_at).isoformat() if run.created_at else None
+    fallback = ensure_utc(run.created_at).isoformat() if run.created_at else None
     result: dict[str, str] = {}
     for document_id in document_ids:
         stamp = stamps.get(document_id) or fallback
@@ -2151,7 +2147,7 @@ async def fail_overdue_ai1_runs(session: AsyncSession, *, now: datetime | None =
             ).scalar_one()
         )
         deadline = ai1_deadline_seconds(pages)
-        waited = (now - _as_utc(started_at)).total_seconds()
+        waited = (now - ensure_utc(started_at)).total_seconds()
         if waited <= deadline:
             continue
         extracted = await _recorded_extractions(session, run_id) or set()

@@ -22,3 +22,6 @@ data/manifest.csv
 reports/*
 !reports/.gitkeep
 !reports/README.md
+
+# Local AI2 runtime database and blobs.
+data/ai2/

@@ -1123,7 +1123,7 @@ Khi người dùng upload hồ sơ hoặc kích hoạt Run phân tích hợp đ�
    - Không được đổi tên trường hoặc xóa trường đã có trong bản contract `v1.0.0`.
    - Các trường mới bổ sung bắt buộc phải là **Optional** (`nullable` hoặc có giá trị mặc định).
 2. **Quy trình Đề Xuất Thay Đổi:**
-   - Mọi đề xuất thêm endpoint hoặc thay đổi payload phải được cập nhật vào [DOC-05-api-spec.yaml](file:///e:/Project_OJT/contract-intelligence-core/docs/DOC-05-api-spec.yaml) trước, sau đó đồng bộ vào tài liệu contract này và nâng phiên bản theo chuẩn SemVer (`v1.1.0` cho tính năng mới, `v2.0.0` nếu có breaking change).
+   - Mọi đề xuất thêm endpoint hoặc thay đổi payload phải được cập nhật vào [DOC-05-api-spec.yaml](DOC-05-api-spec.yaml) trước, sau đó đồng bộ vào tài liệu contract này và nâng phiên bản theo chuẩn SemVer (`v1.1.0` cho tính năng mới, `v2.0.0` nếu có breaking change).
 
 ### Lịch sử phiên bản
 

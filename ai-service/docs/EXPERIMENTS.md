@@ -4,7 +4,7 @@
 |---|---|---|
 | E0 | PyMuPDF | Native text only; scan pages SKIPPED |
 
-E1–E6 (Paddle/DeepSeek OCR experiments, with and without preprocessing variants: deskew, denoise, contrast, adaptive threshold) were removed — no OCR engine adapter is currently wired into the benchmark CLI, only native PyMuPDF extraction. The preprocessing steps themselves (`deskew`, `denoise`, `contrast`, `threshold`, ...) still exist in `infrastructure/image/preprocessing.py` and remain available to any new experiment added against a future OCR engine (see `docs/ARCHITECTURE.md`); they just have nothing to preprocess for today, since E0 never renders a scan.
+E1–E6 (Paddle/DeepSeek OCR experiments, with and without preprocessing variants: deskew, denoise, contrast, adaptive threshold) were removed — no OCR engine adapter is currently wired into the benchmark CLI, only native PyMuPDF extraction. The preprocessing steps themselves (`deskew`, `denoise`, `contrast`, `threshold`, ...) still exist in `infrastructure/image/preprocessing.py` and remain available to any new experiment added against a future OCR engine (see `docs/architecture_ai1.md`); they just have nothing to preprocess for today, since E0 never renders a scan.
 
 Every selected experiment processes the exact same manifest entries. All pipelines use PyMuPDF on usable text layers; E0 cannot recover scan content. Use `actual_engines`, `ocr_pages`, `native_pages`, status and page evidence when comparing. Do not call native-page performance an OCR engine's own accuracy. The summary does not select a winner.
 

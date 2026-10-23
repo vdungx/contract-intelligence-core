@@ -31,6 +31,7 @@ import structlog
 
 from contract_intelligence.config.settings import get_settings
 from contract_intelligence.schemas.users import InviteBounceReason
+from contract_intelligence.shared.utils import as_utc
 
 logger = structlog.get_logger(__name__)
 
@@ -252,7 +253,7 @@ def _message_time(message: Message) -> datetime | None:
         when = parsedate_to_datetime(str(raw))
     except (TypeError, ValueError):
         return None
-    return when.replace(tzinfo=UTC) if when.tzinfo is None else when.astimezone(UTC)
+    return as_utc(when)
 
 
 def _from_null_sender(message: Message) -> bool:

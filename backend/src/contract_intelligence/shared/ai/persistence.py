@@ -62,7 +62,7 @@ from contract_intelligence.shared.ai.schemas import (
     UsageLedgerReport,
 )
 from contract_intelligence.shared.base import new_ulid
-from contract_intelligence.shared.utils import normalize_text
+from contract_intelligence.shared.utils import ensure_utc, normalize_text
 
 logger = structlog.get_logger(__name__)
 
@@ -380,8 +380,8 @@ async def update_pipeline_step_progress(
         return False
     now = now or datetime.now(UTC)
     previous_at = row.progress_at
-    if previous_at is not None and previous_at.tzinfo is None:
-        previous_at = previous_at.replace(tzinfo=UTC)  # SQLite drops the zone
+    if previous_at is not None:
+        previous_at = ensure_utc(previous_at)  # SQLite drops the zone
     if not step_progress.should_write(step_progress.parse(row.progress), previous_at, value, now):
         return False
     row.progress = step_progress.dump(value)

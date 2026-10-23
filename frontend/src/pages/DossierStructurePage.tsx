@@ -14,6 +14,7 @@ import {
   useParams,
 } from 'react-router-dom'
 import { ApiError } from '../api/client'
+import { asRecord } from '../api/normalize'
 import { getInspectorRecord } from '../api/inspector'
 import { clauseOrdinal } from '../api/clauseReview'
 import {
@@ -104,11 +105,6 @@ import {
   type StructureView,
 } from '../structure'
 import { readingPrefs, useReadingPrefs } from '../structure/readingPrefs'
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
-}
 
 function readFocusedCitation(value: unknown): {
   hit: DossierSearchResult['hits'][number]

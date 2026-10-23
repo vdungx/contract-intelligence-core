@@ -936,7 +936,7 @@ Các câu hỏi này là checklist review của tài liệu, không phải khẳ
 
 - Brief dự án/Way of Working trong yêu cầu hiện tại: phạm vi, nhân sự, quy tắc phê duyệt, evidence và lịch dự án.
 - [README](README.md): mục tiêu OCR spike, test UI và hướng dẫn engine; số liệu/giá nội bộ chưa được dùng làm kết quả benchmark của thiết kế này.
-- [Kiến trúc lab](docs/ARCHITECTURE.md): layering, routing, geometry và giới hạn mixed-page.
+- [Kiến trúc AI1](docs/architecture_ai1.md): layering, routing, geometry và giới hạn mixed-page.
 - [Bản kiến trúc sản phẩm trước](docs/CONTRACT_INTELLIGENCE_ARCHITECTURE.md): tham khảo ý định; các quyết định model và cơ chế sửa dữ liệu được xem xét lại.
 - [Output schema](docs/OUTPUT_SCHEMA.md), [JSON Schema](docs/output.schema.json), [entities](src/contract_ocr/domain/entities.py): dữ liệu OCR và nullable geometry/confidence.
 - [Classifier](src/contract_ocr/application/use_cases/classify_pdf.py), [pipeline](src/contract_ocr/application/use_cases/process_document.py): phân loại và orchestration hiện có.

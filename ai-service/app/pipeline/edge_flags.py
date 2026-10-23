@@ -3,20 +3,14 @@
 from __future__ import annotations
 
 import re
-import unicodedata
 
 from app.contracts.models import HandoffIssue, ReviewState
+from app.pipeline.ai1_snapshot_adapter import fold_for_match
 from app.tools.store import DossierRecord
 
 _DIEU = re.compile(r"^Điều (\d+)$")
 _DIEU_HEADING = re.compile(r"^dieu\s+(\d+)\b")
 _ART = re.compile(r"^(?:Art|Article) (\d+)$", re.IGNORECASE)
-
-
-def _fold(value: str) -> str:
-    text = unicodedata.normalize("NFD", value.casefold())
-    text = "".join(char for char in text if unicodedata.category(char) != "Mn")
-    return text.replace("đ", "d")
 
 
 def _issue(code: str, message: str) -> HandoffIssue:
@@ -35,7 +29,7 @@ def dossier_edge_issues(record: DossierRecord) -> list[HandoffIssue]:
 def _numbering_gaps(record: DossierRecord) -> list[HandoffIssue]:
     grouped: dict[str | None, set[int]] = {}
     for node in record.nodes:
-        match = _DIEU_HEADING.match(_fold((node.raw_label or "").strip()))
+        match = _DIEU_HEADING.match(fold_for_match((node.raw_label or "").strip()))
         if match is None:
             continue
         grouped.setdefault(node.parent_id, set()).add(int(match.group(1)))
@@ -89,7 +83,7 @@ def _amended_definitions(record: DossierRecord) -> list[HandoffIssue]:
         for other in record.nodes:
             if other.node_id == node.node_id:
                 continue
-            folded_other = _fold(other.text or "")
+            folded_other = fold_for_match(other.text or "")
             if any(window in folded_other for window in windows):
                 issues.append(_issue("DEFINITION_CASCADE", "an amended definition is used later; no legal winner was chosen"))
                 return issues
@@ -97,5 +91,5 @@ def _amended_definitions(record: DossierRecord) -> list[HandoffIssue]:
 
 
 def _windows(text: str, size: int) -> list[str]:
-    words = _fold(text).split()
+    words = fold_for_match(text).split()
     return [" ".join(words[index:index + size]) for index in range(len(words) - size + 1)]

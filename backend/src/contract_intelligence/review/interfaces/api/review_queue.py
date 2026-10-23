@@ -17,6 +17,7 @@ from contract_intelligence.review.application.dtos.review_dtos import ReviewQueu
 from contract_intelligence.review.infrastructure.persistence.orm import ReviewItemORM
 from contract_intelligence.shared.acl import AclAction, dossier_access_decision
 from contract_intelligence.shared.auth import AuthenticatedUser
+from contract_intelligence.shared.utils import ensure_utc
 
 # Same meaning of "open" as the per-dossier queue and the dossier's review counts.
 _OPEN_STATUSES = ("open", "awaiting_evidence")
@@ -60,9 +61,7 @@ def _grant_expiry(
         raw = grant.get("expires_at")
         if raw in (None, ""):
             return None
-        moment = datetime.fromisoformat(str(raw))
-        if moment.tzinfo is None:
-            moment = moment.replace(tzinfo=UTC)
+        moment = ensure_utc(datetime.fromisoformat(str(raw)))
         if latest is None or moment > latest:
             latest = moment
     return latest

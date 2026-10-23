@@ -1,3 +1,4 @@
+import { asRecord } from './normalize'
 import { ApiError, apiFetch, requestJson } from './client'
 import { isNetworkError, NETWORK_MESSAGE } from './errorMessage'
 
@@ -22,11 +23,6 @@ const TERMINAL_RUN_STATUSES = new Set([
 
 export function isTerminalRunStatus(status: string | null | undefined) {
   return Boolean(status && TERMINAL_RUN_STATUSES.has(status))
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
 }
 
 export async function latestDossierRun(

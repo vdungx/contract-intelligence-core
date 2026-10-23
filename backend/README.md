@@ -114,7 +114,7 @@ uv run uvicorn contract_intelligence.main:app --reload
 uv run pytest
 
 # Lint + enforce layering
-uv run ruff check .
+uv run ruff check src tests
 uv run lint-imports          # alias cho `import-linter --config .importlinter`
 ```
 

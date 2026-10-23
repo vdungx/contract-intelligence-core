@@ -92,7 +92,7 @@ Chi tiết ports, đăng nhập local, OCR, graph, query, consent và troublesho
 
 ```bash
 cd backend
-uv run ruff check . && uv run mypy src && uv run lint-imports && uv run pytest tests/unit tests/architecture
+uv run ruff check src tests && uv run mypy src && uv run lint-imports && uv run pytest tests/unit tests/architecture
 ```
 
 Chi tiết từng phần: [`backend/README.md`](backend/README.md), [`ai-service/README.md`](ai-service/README.md), [`HUONG-DAN-CHAY.md`](HUONG-DAN-CHAY.md), [`deploy/README.md`](deploy/README.md).

@@ -15,6 +15,7 @@ from app.contracts.models import (
     RelationType,
     ReviewState,
 )
+from app.pipeline.ai1_snapshot_adapter import fold_for_match
 from app.pipeline.citations import CitationResolver, quote_digest
 from app.pipeline.relation_markers import defined_term, has_amend_marker
 from app.tools.store import DossierRecord
@@ -382,10 +383,10 @@ def render_comparison_answer(packed: list[dict[str, Any]], query: str = "") -> s
     annex_label = _comparison_label(annex_root, "Phụ lục")
     body_title = _comparison_title(body_root.get("label") or body_root.get("path") or "")
     annex_title = _comparison_title(annex_root.get("label") or annex_root.get("path") or "")
-    body_folded = _comparison_fold(body_title)
-    annex_folded = _comparison_fold(annex_title)
+    body_folded = fold_for_match(body_title)
+    annex_folded = fold_for_match(annex_title)
 
-    if "ngay lam viec" in _comparison_fold(body_text):
+    if "ngay lam viec" in fold_for_match(body_text):
         body_sentence = (
             f'{body_label} định nghĩa các thuật ngữ và quy định về "Ngày làm việc", '
             f'cụ thể là "{body_text}".'
@@ -418,18 +419,12 @@ def render_comparison_answer(packed: list[dict[str, Any]], query: str = "") -> s
 
 
 def _comparison_side(value: Any) -> str:
-    folded = _comparison_fold(str(value or ""))
+    folded = fold_for_match(str(value or ""))
     if "phu luc" in folded or "annex" in folded or "appendix" in folded:
         return "annex"
     if "than" in folded or "contract" in folded or "body" in folded:
         return "body"
     return ""
-
-
-def _comparison_fold(value: str) -> str:
-    text = unicodedata.normalize("NFD", value.casefold())
-    text = "".join(char for char in text if unicodedata.category(char) != "Mn")
-    return text.replace("đ", "d")
 
 
 def _comparison_text(item: dict[str, Any]) -> str:
@@ -444,7 +439,7 @@ def _comparison_detail(items: list[dict[str, Any]], *, prefer: str) -> dict[str,
         working = [
             item
             for item in candidates
-            if "ngay lam viec" in _comparison_fold(_comparison_text(item))
+            if "ngay lam viec" in fold_for_match(_comparison_text(item))
         ]
         if working:
             return working[0]
@@ -459,7 +454,7 @@ def _comparison_detail(items: list[dict[str, Any]], *, prefer: str) -> dict[str,
 
 def _comparison_label(item: dict[str, Any], fallback: str) -> str:
     text = str(item.get("label") or item.get("path") or "")
-    folded = _comparison_fold(text)
+    folded = fold_for_match(text)
     match = re.search(r"(?:dieu|article)\s+0*(\d+)", folded)
     if match:
         return f"Điều {int(match.group(1))}"

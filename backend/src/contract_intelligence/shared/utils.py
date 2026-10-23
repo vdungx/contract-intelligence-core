@@ -42,10 +42,19 @@ def safe_filename(name: str | None, *, fallback: str = "upload.bin") -> str:
     return cleaned[:255]
 
 
+def ensure_utc(dt: datetime) -> datetime:
+    """Treat a naive datetime as UTC; leave an aware one unchanged."""
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
+
+
+def as_utc(dt: datetime) -> datetime:
+    """Return a timezone-aware datetime in UTC; naive input is assumed UTC."""
+    return ensure_utc(dt).astimezone(UTC)
+
+
 def to_iso_z(dt: datetime) -> str:
     """ISO 8601 UTC với hậu tố ``Z`` — dễ đọc trong log/UI."""
-    aware = dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
-    return aware.isoformat().replace("+00:00", "Z")
+    return as_utc(dt).isoformat().replace("+00:00", "Z")
 
 
 def to_iso_date(d: date) -> str:

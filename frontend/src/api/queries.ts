@@ -1,3 +1,4 @@
+import { asRecord, asString as asText } from './normalize'
 import { requestJson } from './client'
 
 export type QueryScope = 'mine'
@@ -29,15 +30,6 @@ export type QueryHistoryItem = {
 }
 
 export const QUERY_HISTORY_PAGE = 20
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
-}
-
-function asText(value: unknown) {
-  return typeof value === 'string' ? value : ''
-}
 
 function citationOf(value: unknown): QueryHistoryCitation | null {
   const row = asRecord(value)

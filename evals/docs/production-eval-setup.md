@@ -1,6 +1,6 @@
 # AI2 evaluation guide
 
-Ngày cập nhật: 2026-09-23
+Ngày cập nhật: 2026-10-23
 
 Bộ đánh giá này chỉ kiểm tra AI2 sau khi đã nhận handoff JSON từ AI1. Upload,
 PDF parsing và OCR không thuộc phạm vi của bộ này.
@@ -48,9 +48,11 @@ dấu tiếng Việt.
 
 ## CI
 
-Workflow [production-evals.yml](../ci/production-evals.yml) chạy service tests,
-eval contract tests và hai production eval domain. LLM judge nếu được bật chỉ
-mang tính advisory, không thay thế deterministic scorer.
+Hiện **không có** workflow CI nào chạy bộ eval này: file cũ từng nằm ở
+`evals/ci/` không phải thư mục GitHub Actions đọc, nên đã bị xoá thay vì để
+gây hiểu nhầm là đã có gate tự động. Chạy tay các lệnh ở mục
+[Chạy local](#chạy-local) trước khi merge. LLM judge nếu được bật chỉ mang tính
+advisory, không thay thế deterministic scorer.
 
 ## Mở rộng ground truth
 

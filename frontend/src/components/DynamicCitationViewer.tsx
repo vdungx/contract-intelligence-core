@@ -1,4 +1,5 @@
 import { apiBaseUrl } from '../api/client'
+import { asRecord, asString } from '../api/normalize'
 import {
   documentRoleLabel,
   linesLabel,
@@ -25,15 +26,6 @@ export type CitationViewerModel = {
   unverified?: boolean
   tableId?: string | null
   cellId?: string | null
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
-}
-
-function asString(value: unknown) {
-  return typeof value === 'string' ? value : ''
 }
 
 function asNumber(value: unknown) {

@@ -94,7 +94,7 @@ Integration (compose, Kafka thật, AI2 giả trả kết quả cố định):
 ### B8. Tài liệu và dọn dẹp — 0,5 ngày
 
 - DOC-09 (SAD): sửa đoạn "AI2 chỉ có một đường HTTP" và quyết định D4.
-- `HUONG-DAN-TEST-E2E-UPLOAD.md`, `backend/README.md`: cách chạy với `AI2_TRANSPORT=kafka`, cách xem topic và DLQ.
+- `docs/HUONG-DAN-TEST-E2E-UPLOAD.md`, `backend/README.md`: cách chạy với `AI2_TRANSPORT=kafka`, cách xem topic và DLQ.
 - Sau khi mặc định chuyển sang `kafka` một sprint: xoá `submit_ai2_processing`/`poll_ai2_processing` khỏi worker, `_ai2_tasks`, `_ai2_semaphore`, và bộ hàm trùng `submit_idp_job`/`get_idp_job`/`poll_idp_job`/`build_idp_request` trong `ai_adapters.py`.
 
 ## 4. Lịch

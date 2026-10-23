@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import unicodedata
 from typing import Any
 
 from app.contracts.models import LifecycleState, ReviewState, ToolEnvelope
@@ -25,12 +24,6 @@ def _count_entity_ask(low: str) -> bool:
     from app.reasoning.l0_rules import _count_entity_query
 
     return _count_entity_query(low)
-
-
-def _plain_query(value: str) -> str:
-    text = unicodedata.normalize("NFD", value.casefold())
-    text = "".join(char for char in text if unicodedata.category(char) != "Mn")
-    return text.replace("đ", "d")
 
 
 class QueryRouter:

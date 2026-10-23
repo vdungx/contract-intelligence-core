@@ -25,7 +25,7 @@ import asyncio
 import json
 import re
 import time
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated, Any, Literal, TypeVar
 from urllib.parse import quote
 
@@ -137,6 +137,7 @@ from contract_intelligence.shared.responses import (
     ErrorResponse,
 )
 from contract_intelligence.shared.storage import ByteRange, RangeNotSatisfiableError
+from contract_intelligence.shared.utils import as_utc
 
 router = APIRouter(tags=["Contract"])
 logger = structlog.get_logger(__name__)
@@ -228,16 +229,12 @@ class DossierAccessDTO(BaseModel):
     email_not_sent: list[EmailNotSentDTO] = Field(default_factory=list)
 
 
-def _as_utc(value: datetime) -> datetime:
-    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
-
-
 def _parse_expiry(value: Any) -> datetime | None:
     """Stored ``expires_at`` as an aware UTC instant; None when absent or unreadable."""
     if not value:
         return None
     try:
-        return _as_utc(datetime.fromisoformat(str(value)))
+        return as_utc(datetime.fromisoformat(str(value)))
     except ValueError:
         return None
 
@@ -246,7 +243,7 @@ def _stored_grant(item: AccessGrantBody) -> dict[str, Any]:
     """Grant as kept in metadata; ``expires_at`` as UTC ISO so SQL can compare it as text."""
     grant = item.model_dump()
     grant["expires_at"] = (
-        _as_utc(item.expires_at).isoformat(timespec="seconds") if item.expires_at else None
+        as_utc(item.expires_at).isoformat(timespec="seconds") if item.expires_at else None
     )
     return grant
 
@@ -1908,7 +1905,7 @@ async def update_dossier_access(
     for item in body.shared_with:
         if item.expires_at is None:
             continue
-        expires_at = _as_utc(item.expires_at)
+        expires_at = as_utc(item.expires_at)
         if expires_at <= now and previous_expiry.get(item.id) != expires_at.replace(microsecond=0):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

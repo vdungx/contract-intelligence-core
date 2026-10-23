@@ -108,7 +108,7 @@ Chỉ những việc người khác đã nêu cho frontend.
 | Mentor | Xung đột hiện cả cặp hợp đồng–hợp đồng | Màn đối soát đọc finding hai hợp đồng cùng cách với cặp có phụ lục |
 | Đức Dũng | Tiến độ chạy bằng SSE `/runs/{id}/events`, hết SSE thì mới hỏi lại định kỳ | Đang chạy thì màn tiến độ đổi ngay khi có sự kiện. Rời trang thì đóng kết nối |
 | Văn Dũng (tuần 30/09–04/10) | Luồng demo: danh sách hồ sơ → mở hồ sơ → bấm giá trị thì sáng vùng trích → xác nhận, sửa hoặc từ chối | Tập được trên UI không đứt giữa chừng |
-| Văn Dũng | Ghép phần Architecture và API Spec. Sửa `HUONG-DAN-TEST-E2E-UPLOAD.md` vì tài liệu còn ghi AI2 qua Kafka trong khi compose đang gọi HTTP `ai2-service:8002` | Hai tài liệu nộp sprint khớp cấu hình đang chạy |
+| Văn Dũng | Ghép phần Architecture và API Spec. Sửa `docs/HUONG-DAN-TEST-E2E-UPLOAD.md` vì tài liệu còn ghi AI2 qua Kafka trong khi compose đang gọi HTTP `ai2-service:8002` | Hai tài liệu nộp sprint khớp cấu hình đang chạy |
 
 Lead trong tuần này: chốt provider LLM, người giữ key và trần chi tiêu (hạn 30/09); hỏi mentor lịch demo; review và merge PR AI2 vào `develop`.
 

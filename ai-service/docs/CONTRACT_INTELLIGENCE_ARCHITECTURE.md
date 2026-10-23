@@ -8,7 +8,7 @@
 | **Phạm vi** | Toàn bộ hệ thống sản phẩm (Sprint 2–3), kế thừa spike OCR Sprint 1 (`contract-ocr-lab`) |
 | **Quyết định đã chốt** | Engine OCR chính = **OpenAI GPT-5.6 "Terra"** — vision API, bản giữa dòng GPT-5.6 |
 
-> Tài liệu này mô tả kiến trúc cho **toàn bộ sản phẩm** Contract Intelligence. Nó khác với [`docs/ARCHITECTURE.md`](ARCHITECTURE.md), vốn chỉ mô tả spike benchmark OCR nội bộ của Sprint 1 (không service, không DB, không frontend). Tài liệu này **mở rộng** codebase Sprint 1 (`src/contract_ocr/`) thành một hệ thống có backend service, database, hàng đợi xử lý bất đồng bộ và web UI HITL.
+> Tài liệu này mô tả kiến trúc cho **toàn bộ sản phẩm** Contract Intelligence. Nó khác với [`docs/architecture_ai1.md`](architecture_ai1.md), vốn chỉ mô tả AI1 (OCR + dựng snapshot) trong codebase Sprint 1 (không service, không DB, không frontend). Tài liệu này **mở rộng** codebase Sprint 1 (`src/contract_ocr/`) thành một hệ thống có backend service, database, hàng đợi xử lý bất đồng bộ và web UI HITL.
 
 > ⚠️ **Xung đột chưa giải quyết, cần chốt trước khi Mentor duyệt tài liệu này:** PaddleOCR — engine được tài liệu này chỉ định làm **fallback bắt buộc cho tài liệu nhạy cảm / on-prem** (§3, §4.1, §4.3, §8, §9, §13) — đã bị gỡ hoàn toàn khỏi codebase `contract-ocr-lab` (không dùng nữa, theo quyết định ngoài phạm vi tài liệu này). Hệ quả: **route bắt buộc "tài liệu nhạy cảm → PaddleOCR local" ở §9 hiện không có engine nào để trỏ tới.** Các đoạn nhắc tới PaddleOCR bên dưới được giữ nguyên làm bản ghi ý định kiến trúc gốc, đánh dấu ⚠️ tại từng chỗ — **chưa tự thay bằng engine khác**, vì mọi engine đang có (OpenAI/Gemini/Mistral) đều gửi ảnh ra ngoài, phá vỡ đúng thuộc tính "không rời máy" mà PaddleOCR được chọn để đảm bảo. Cần Mentor/team quyết định: dựng lại một engine local khác, chấp nhận gửi tài liệu nhạy cảm ra ngoài có kiểm soát (zero-retention, xem §9), hay chặn hẳn luồng tài liệu nhạy cảm cho tới khi có phương án.
 
@@ -407,6 +407,6 @@ erDiagram
 ---
 
 ### Tài liệu liên quan
-- [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — kiến trúc chi tiết pipeline OCR nội bộ (Sprint 1 spike), vẫn đúng ở tầng OCR Worker của tài liệu này.
+- [`docs/architecture_ai1.md`](architecture_ai1.md) — kiến trúc chi tiết OCR và dựng snapshot của AI1, vẫn đúng ở tầng OCR Worker của tài liệu này.
 - [`docs/OUTPUT_SCHEMA.md`](OUTPUT_SCHEMA.md) / `docs/output.schema.json` — schema JSON cấp trang, không đổi.
 - `src/contract_ocr/infrastructure/ocr/openai_vision_ocr.py` — adapter OpenAI; `DEFAULT_MODEL = "gpt-5.6-terra"` đã đúng với quyết định này, không cần sửa code. Muốn thử Luna sau này chỉ cần truyền `model="gpt-5.6-luna"` qua config.

@@ -1,3 +1,4 @@
+import { asNullableString as asText, asRecord } from './normalize'
 import { ApiError, getJson, requestJson } from './client'
 import type { ClauseNode } from './structure'
 
@@ -40,15 +41,6 @@ export class ClauseReviewConflictError extends Error {
     this.name = 'ClauseReviewConflictError'
     this.current = current
   }
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
-}
-
-function asText(value: unknown): string | null {
-  return typeof value === 'string' ? value : null
 }
 
 function normalizeEntry(value: unknown): ClauseReviewEntry {

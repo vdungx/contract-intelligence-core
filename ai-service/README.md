@@ -228,6 +228,8 @@ uv run ruff check src scripts tests
 uv run ruff format --check src scripts tests
 ```
 
+Test cục bộ deterministic không cần PostgreSQL: đặt `AI2_REQUIRE_DATABASE=false`. Mặc định runtime vẫn là `true` khi chưa đặt biến, nên chỉ dùng `false` cho test cô lập.
+
 Có GNU Make (Linux/macOS, hoặc WSL/Git Bash trên Windows nếu cài `make`): `make install`, `make test`, `make lint`, `make inspect FILE=example.pdf`, `make generate-degraded FILE=example.pdf`, `make benchmark MANIFEST=data/manifest.csv OUTPUT=reports/run_001` — các target này chỉ gọi lại đúng các lệnh `uv run` ở trên. PowerShell/CMD trên Windows thường không có `make` sẵn, dùng thẳng các lệnh `uv run` phía trên.
 
 Config chính là `configs/default.yaml`. Dùng `--config`. Environment override hỗ trợ `OCR_DPI`; `.env.example` chỉ là mẫu, không tự được nạp. `experiments/definitions.yaml` là danh sách thí nghiệm tham khảo; runner đọc danh sách trong config được chọn.
@@ -266,7 +268,7 @@ src/contract_ocr/
 └── cli/             # wiring dependency và commands
 ```
 
-Xem [kiến trúc](docs/ARCHITECTURE.md), [thí nghiệm](docs/EXPERIMENTS.md), [dataset](docs/DATASET.md), [schema](docs/OUTPUT_SCHEMA.md).
+Xem [kiến trúc](docs/architecture_ai1.md), [thí nghiệm](docs/EXPERIMENTS.md), [dataset](docs/DATASET.md), [schema](docs/OUTPUT_SCHEMA.md).
 
 - Text layer đủ dài nhưng sai/mất nội dung vẫn có thể được đánh giá là usable; MIXED ưu tiên native khi đủ ngưỡng. Cần kiểm tra bằng annotation, đặc biệt trang chỉ có một phần text layer.
 - Native reading order/bảng và markdown OCR có thể khác ground truth. CER giữ whitespace, WER tách theo whitespace; chưa có đánh giá cấu trúc bảng ở benchmark CLI (bảng chỉ được đánh giá qua snapshot AI1, mục 9).

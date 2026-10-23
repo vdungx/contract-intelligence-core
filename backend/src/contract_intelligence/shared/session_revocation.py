@@ -9,7 +9,7 @@ query. Rows are kept until no token of the session can still be valid
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy import DateTime, Text, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +19,7 @@ from contract_intelligence.config.settings import get_settings
 from contract_intelligence.shared.auth.revoked_sessions import revoked_sessions
 from contract_intelligence.shared.base import utcnow
 from contract_intelligence.shared.persistence.base import Base
+from contract_intelligence.shared.utils import ensure_utc
 
 
 class RevokedSessionORM(Base):
@@ -64,13 +65,8 @@ async def load_revoked_sessions(session: AsyncSession) -> int:
         )
     ).all()
     await session.commit()
-    revoked_sessions.replace({sid: _aware(expires_at).timestamp() for sid, expires_at in rows})
+    revoked_sessions.replace({sid: ensure_utc(expires_at).timestamp() for sid, expires_at in rows})
     return len(rows)
-
-
-def _aware(value: datetime) -> datetime:
-    # SQLite (tests) returns naive datetimes for timezone=True columns.
-    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
 
 
 __all__ = ["RevokedSessionORM", "load_revoked_sessions", "revoke_session"]

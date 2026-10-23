@@ -20,7 +20,7 @@ import secrets
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import structlog
@@ -45,6 +45,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from contract_intelligence.shared.base import new_ulid, utcnow
 from contract_intelligence.shared.persistence.base import Base
+from contract_intelligence.shared.utils import ensure_utc as aware
 
 logger = structlog.get_logger(__name__)
 
@@ -158,11 +159,6 @@ def chunk_key(tenant_id: str, upload_id: str, file_index: int, chunk_no: int) ->
     refused (session already claimed) cannot change the bytes being joined.
     """
     return f"uploads/{tenant_id}/{upload_id}/{file_index}/{chunk_no:05d}.{secrets.token_hex(8)}"
-
-
-def aware(value: datetime) -> datetime:
-    # SQLite (tests) returns naive datetimes for timezone=True columns.
-    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
 
 
 # Fallback for databases without advisory locks (SQLite in tests and local

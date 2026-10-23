@@ -6,6 +6,7 @@ import time
 from typing import Any
 
 from app.contracts.models import ToolEnvelope
+from app.pipeline.ai1_snapshot_adapter import fold_for_match
 from app.pipeline.result_structure import _is_running_furniture
 from app.reasoning.relations import build_relation_graph
 from app.reasoning.vector_recall import VectorRecallService
@@ -289,7 +290,7 @@ def expand_logical_tables(
             continue
         meta = gateway.call("get_table_meta", envelope, table_id=table_id)
         headers = [str(value or "") for value in meta.get("header", [])]
-        folded = " ".join(_plain_query(value) for value in headers)
+        folded = " ".join(fold_for_match(value) for value in headers)
         if not any(token in folded for token in ("thanh toan", "payment", "milestone")):
             continue
         source_rows = max(0, int(meta.get("n_rows", 0)))
@@ -362,7 +363,7 @@ def expand_logical_tables(
 
 
 def _asks_payment_schedule(query: str) -> bool:
-    normalized = _plain_query(query)
+    normalized = fold_for_match(query)
     return any(term in normalized for term in ("thanh toan", "payment", "milestone", "cac dot"))
 
 
@@ -384,7 +385,7 @@ def structured_keys(query: str, ttype: str | None) -> list[str]:
 
 def _exact_label_ids(query: str, outline: list[dict[str, Any]]) -> list[str]:
     labels: list[str] = []
-    plain = _plain_query(query)
+    plain = fold_for_match(query)
     for m in re.finditer(r"dieu\s+(\d+(?:\.\d+)?)", plain, re.I):
         labels.append(f"Điều {m.group(1)}")
     for m in re.finditer(r"(?:phu luc|annex)\s+(\d+)", plain, re.I):
@@ -399,10 +400,10 @@ def _exact_label_ids(query: str, outline: list[dict[str, Any]]) -> list[str]:
         labels.append(f"Phụ lục {m.group(1)}")
     ids: list[str] = []
     for lab in labels:
-        wanted = _plain_query(lab)
+        wanted = fold_for_match(lab)
         for n in outline:
             raw = (n.get("raw_label") or "").strip()
-            normalized = _plain_query(raw)
+            normalized = fold_for_match(raw)
             same_annex = _same_annex_heading(wanted, normalized)
             if (
                 normalized == wanted
@@ -441,7 +442,7 @@ def _drop_repeated_annex_headings(
         item = by_id.get(hit.get("node_id"))
         if not item or item.get("type") != "SECTION":
             continue
-        number = _annex_heading_number(_plain_query(item.get("raw_label") or ""))
+        number = _annex_heading_number(fold_for_match(item.get("raw_label") or ""))
         if number is not None:
             section_numbers.add(number)
     if not section_numbers:
@@ -450,7 +451,7 @@ def _drop_repeated_annex_headings(
     for hit in hits:
         item = by_id.get(hit.get("node_id"))
         if item and item.get("type") != "SECTION":
-            number = _annex_heading_number(_plain_query(item.get("raw_label") or ""))
+            number = _annex_heading_number(fold_for_match(item.get("raw_label") or ""))
             if number is not None and number in section_numbers:
                 continue
         kept.append(hit)
@@ -489,7 +490,7 @@ _RESPONSIBILITY_SECTION_CUES = (
 
 
 def _is_responsibility_query(query: str) -> bool:
-    normalized = _plain_query(query)
+    normalized = fold_for_match(query)
     return any(cue in normalized for cue in _RESPONSIBILITY_QUERY_CUES)
 
 
@@ -524,7 +525,7 @@ def _expand_responsibility_groups(
             candidate = nodes.get(candidate_id)
             if candidate is None or not children.get(candidate_id):
                 continue
-            label = _plain_query(" ".join((candidate.raw_label or "", candidate.text or "")))
+            label = fold_for_match(" ".join((candidate.raw_label or "", candidate.text or "")))
             if any(cue in label for cue in _RESPONSIBILITY_SECTION_CUES):
                 if candidate_id not in parent_ids:
                     parent_ids.append(candidate_id)
@@ -542,7 +543,7 @@ def _expand_responsibility_groups(
             # clause by OCR repair. It is structural furniture, not another
             # responsibility clause. Likewise, a SECTION/CLAUSE child is a
             # heading boundary, not a sibling obligation body.
-            folded_label = _plain_query(child.raw_label or "")
+            folded_label = fold_for_match(child.raw_label or "")
             if (
                 _is_running_furniture(child.raw_label or "")
                 or "tiep theo" in folded_label
@@ -593,7 +594,7 @@ def _topic_hits(record: Any, query: str, limit: int = 3) -> list[dict[str, Any]]
 
 
 def _scored_lexical_hits(record: Any, query: str) -> list[tuple[float, dict[str, Any]]]:
-    folded = _plain_query(expand_query(query))
+    folded = fold_for_match(expand_query(query))
     stop = {
         "hop",
         "dong",
@@ -626,7 +627,7 @@ def _scored_lexical_hits(record: Any, query: str) -> list[tuple[float, dict[str,
     phrases = [f"{left} {right}" for left, right in zip(content, content[1:])]
     scored: list[tuple[float, dict[str, Any]]] = []
     for node in record.evidence_nodes():
-        blob = _plain_query(
+        blob = fold_for_match(
             " ".join(
                 str(value or "") for value in (node.raw_label, node.text, node.structured_value)
             )
@@ -634,21 +635,13 @@ def _scored_lexical_hits(record: Any, query: str) -> list[tuple[float, dict[str,
         # Whole words only: a substring match lets "than" hit every "thanh toán".
         score = float(sum(1 for term in terms if re.search(rf"\b{re.escape(term)}\b", blob)))
         score += 2 * sum(1 for phrase in phrases if re.search(rf"\b{re.escape(phrase)}\b", blob))
-        if score and re.match(r"(?:dieu|phu luc)\s+\d", _plain_query(node.raw_label or "").strip()):
+        if score and re.match(r"(?:dieu|phu luc)\s+\d", fold_for_match(node.raw_label or "").strip()):
             # A matching heading carries its sub-clauses into the answer.
             score += 0.5
         if score:
             scored.append((score, _hit_from_node(node.model_dump())))
     scored.sort(key=lambda item: item[0], reverse=True)
     return scored[:12]
-
-
-def _plain_query(value: str) -> str:
-    import unicodedata
-
-    text = unicodedata.normalize("NFD", value.casefold())
-    text = "".join(char for char in text if unicodedata.category(char) != "Mn")
-    return text.replace("đ", "d")
 
 
 def _hit_from_node(node: dict[str, Any]) -> dict[str, Any]:
@@ -668,7 +661,7 @@ def _hit_from_node(node: dict[str, Any]) -> dict[str, Any]:
 def _filter_term_hits(query: str, hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Reject lexical/vector hits that do not contain the requested concept."""
 
-    normalized_query = _plain_query(expand_query(query))
+    normalized_query = fold_for_match(expand_query(query))
     # Topic cues name what the clause is about; timing cues only qualify it.
     # "Thời hạn thanh toán" asks about payment, so a confidentiality clause
     # that merely says "thời hạn" must not pass on the timing word alone.
@@ -693,7 +686,7 @@ def _filter_term_hits(query: str, hits: list[dict[str, Any]]) -> list[dict[str, 
     kept: list[dict[str, Any]] = []
     for hit in hits:
         citation = hit.get("citation") or {}
-        evidence = _plain_query(
+        evidence = fold_for_match(
             " ".join(str(value or "") for value in (hit.get("value"), citation.get("text_span")))
         )
         if any(cue in evidence for cue in wanted):
@@ -702,7 +695,7 @@ def _filter_term_hits(query: str, hits: list[dict[str, Any]]) -> list[dict[str, 
 
 
 def _filter_relation_hits(query: str, hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    normalized_query = _plain_query(expand_query(query))
+    normalized_query = fold_for_match(expand_query(query))
     cues = []
     if "phu luc" in normalized_query or "annex" in normalized_query:
         cues.append(("phu luc", "annex"))
@@ -718,7 +711,7 @@ def _filter_relation_hits(query: str, hits: list[dict[str, Any]]) -> list[dict[s
     kept: list[dict[str, Any]] = []
     for hit in hits:
         citation = hit.get("citation") or {}
-        evidence = _plain_query(
+        evidence = fold_for_match(
             " ".join(
                 str(value or "")
                 for value in (
@@ -765,7 +758,7 @@ def _filter_topic_hits(
 ) -> list[dict[str, Any]] | None:
     """Keep hits that mention every topic the query names; None when no topic."""
 
-    plain_q = _TAX_ID.sub(" ", _plain_query(query))
+    plain_q = _TAX_ID.sub(" ", fold_for_match(query))
     wanted = [ev for q_cues, ev in TOPICS.values() if _has_cue(plain_q, q_cues)]
     if not wanted:
         return None
@@ -782,7 +775,7 @@ def _filter_topic_hits(
             citation = hit.get("citation") or {}
             parts = (hit.get("value"), citation.get("text_span"))
         blob = " ".join(str(v or "") for v in parts)
-        evidence = _TAX_ID.sub(" ", _plain_query(blob))
+        evidence = _TAX_ID.sub(" ", fold_for_match(blob))
         if all(_has_cue(evidence, cues) for cues in wanted):
             kept.append(hit)
     return kept

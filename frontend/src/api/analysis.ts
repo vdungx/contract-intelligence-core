@@ -1,3 +1,4 @@
+import { asNullableString, asNumber, asRecord, asString } from './normalize'
 import { getJson } from './client'
 import { decodeFindingSemantic, type FindingSemantic } from './semanticResults'
 
@@ -48,23 +49,6 @@ export type DossierFinding = {
   sides: FindingSide[]
   semantic?: FindingSemantic | null
   runId?: string | null
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
-}
-
-function asString(value: unknown, fallback = '') {
-  return typeof value === 'string' ? value : fallback
-}
-
-function asNumber(value: unknown, fallback = 0) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
-}
-
-function asNullableString(value: unknown) {
-  return typeof value === 'string' ? value : null
 }
 
 function asBBox(value: unknown): [number, number, number, number] | null {

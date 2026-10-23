@@ -20,6 +20,7 @@ from enum import StrEnum
 from typing import Any
 
 from contract_intelligence.shared.auth.schemas import AuthenticatedUser
+from contract_intelligence.shared.utils import ensure_utc
 
 
 class AclAction(StrEnum):
@@ -110,9 +111,7 @@ def grant_is_live(grant: dict[str, Any], now: datetime) -> bool:
         moment = datetime.fromisoformat(str(expires_at))
     except ValueError:
         return False
-    if moment.tzinfo is None:
-        moment = moment.replace(tzinfo=UTC)
-    return now < moment
+    return now < ensure_utc(moment)
 
 
 def grant_permission(grant: dict[str, Any]) -> str:
@@ -213,7 +212,7 @@ def _expiry(grant: dict[str, Any]) -> datetime | None:
         moment = datetime.fromisoformat(str(raw))
     except ValueError:
         return None
-    return moment if moment.tzinfo is not None else moment.replace(tzinfo=UTC)
+    return ensure_utc(moment)
 
 
 def dossier_my_access(

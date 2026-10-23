@@ -1,3 +1,4 @@
+import { asRecord } from './normalize'
 import { ApiError, requestJson } from './client'
 import {
   isNetworkError,
@@ -29,11 +30,6 @@ const FINISHED = new Set(['completed', 'succeeded', 'failed', 'cancelled'])
 
 export function isReOcrFinished(status: string) {
   return FINISHED.has(status.toLowerCase())
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
 }
 
 function text(row: Record<string, unknown>, key: string) {

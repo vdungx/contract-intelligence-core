@@ -1,3 +1,4 @@
+import { asNumber, asRecord, asString } from './normalize'
 import {
   ApiError,
   postMultipartWithProgress,
@@ -87,19 +88,6 @@ export type OcrInspection = {
   detail: string | null
   /** Nguyên văn lỗi, chỉ hiện cho quản trị viên. */
   technical?: string | null
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
-}
-
-function asString(value: unknown) {
-  return typeof value === 'string' ? value : ''
-}
-
-function asNumber(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
 function asOptionalCount(value: unknown) {

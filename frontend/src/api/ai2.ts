@@ -1,3 +1,5 @@
+import { asRecord } from './normalize'
+
 export type Ai2ReviewState =
   | 'PASS'
   | 'ANSWERED'
@@ -73,11 +75,6 @@ export type Ai2PipelineStatus = {
   errorCode: string | null
   errorMessage: string | null
   steps: Ai2PipelineStep[]
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
 }
 
 function asString(value: unknown): string {

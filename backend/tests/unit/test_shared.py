@@ -1,6 +1,6 @@
 """Unit tests cho shared/ utilities."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 from contract_intelligence.shared.base import new_ulid
 from contract_intelligence.shared.exceptions import (
@@ -9,7 +9,13 @@ from contract_intelligence.shared.exceptions import (
     NotFoundError,
     ReviewVersionConflict,
 )
-from contract_intelligence.shared.utils import normalize_text, safe_filename, to_iso_z
+from contract_intelligence.shared.utils import (
+    as_utc,
+    ensure_utc,
+    normalize_text,
+    safe_filename,
+    to_iso_z,
+)
 
 
 class TestNewUlid:
@@ -49,6 +55,23 @@ class TestToIsoZ:
     def test_naive_assumed_utc(self) -> None:
         naive = datetime(2026, 1, 1, 12, 0)
         assert to_iso_z(naive) == "2026-01-01T12:00:00Z"
+
+
+class TestUtcHelpers:
+    def test_ensure_utc_marks_naive_and_keeps_aware(self) -> None:
+        assert ensure_utc(datetime(2026, 1, 1, 12, 0)).tzinfo == UTC
+        plus7 = datetime(2026, 1, 1, 19, 0, tzinfo=timezone(timedelta(hours=7)))
+        assert ensure_utc(plus7) is plus7
+
+    def test_as_utc_converts_offset_to_same_instant(self) -> None:
+        plus7 = datetime(2026, 1, 1, 19, 0, tzinfo=timezone(timedelta(hours=7)))
+        converted = as_utc(plus7)
+        assert converted == plus7
+        assert converted.utcoffset() == timedelta(0)
+
+    def test_as_utc_assumes_naive_is_utc(self) -> None:
+        naive = datetime(2026, 1, 1, 12, 0)
+        assert as_utc(naive) == naive.replace(tzinfo=UTC)
 
 
 class TestDomainExceptions:

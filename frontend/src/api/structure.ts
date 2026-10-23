@@ -1,3 +1,4 @@
+import { asNumber, asRecord, asString } from './normalize'
 import {
   STRUCTURE_MODE_KEY,
   parseStructureMode,
@@ -172,19 +173,6 @@ export function countClauses(nodes: ClauseNode[]): number {
     (total, node) => total + 1 + countClauses(node.children),
     0,
   )
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as Record<string, unknown>
-}
-
-function asString(value: unknown) {
-  return typeof value === 'string' ? value : ''
-}
-
-function asNumber(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
 function asClause(value: unknown): ClauseNode | null {

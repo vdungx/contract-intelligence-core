@@ -981,7 +981,7 @@ Không dùng câu model tự báo `confidence=0.98` như 98% chính xác. OCR co
 
 ## 22. Change record
 
-Theo [DOCUMENT-GOVERNANCE.md](DOCUMENT-GOVERNANCE.md), mọi thay đổi ADR/contract/lifecycle phải ghi owner, ngày, lý do, requirement bị ảnh hưởng và tài liệu phải sửa.
+Theo [DOCUMENT-GOVERNANCE.md](governance/DOCUMENT-GOVERNANCE.md), mọi thay đổi ADR/contract/lifecycle phải ghi owner, ngày, lý do, requirement bị ảnh hưởng và tài liệu phải sửa.
 
 | Ngày | Phiên bản | Thay đổi | Lý do | Ảnh hưởng | Tài liệu đã đồng bộ | Owner |
 |---|---|---|---|---|---|---|

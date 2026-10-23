@@ -49,6 +49,7 @@ from contract_intelligence.contract.infrastructure.persistence.orm import (
 from contract_intelligence.shared.base import Page, new_ulid, utcnow
 from contract_intelligence.shared.page_features import page_ocr_status
 from contract_intelligence.shared.run_events import record_run_event
+from contract_intelligence.shared.utils import ensure_utc
 
 
 def _coerce_int(value: object, default: int = 0) -> int:
@@ -653,8 +654,8 @@ class DossierRepositoryImpl(DossierRepository):
         for dossier_id, is_locked, approved_at in rows:
             if isinstance(approved_at, str):  # SQLite returns text for raw SQL
                 approved_at = datetime.fromisoformat(approved_at)
-            if approved_at is not None and approved_at.tzinfo is None:
-                approved_at = approved_at.replace(tzinfo=UTC)
+            if approved_at is not None:
+                approved_at = ensure_utc(approved_at)
             result[str(dossier_id)] = (bool(is_locked), approved_at)
         return result
 

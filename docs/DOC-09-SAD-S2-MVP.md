@@ -489,7 +489,7 @@ npm run dev        # http://localhost:5173
 # Tài khoản seed: admin@ci.local / Admin@CI123 (role ADMINISTRATOR)
 ```
 
-Hướng dẫn kiểm tra từng chặng (log cần thấy ở mỗi bước) có trong `HUONG-DAN-TEST-E2E-UPLOAD.md`.
+Hướng dẫn kiểm tra từng chặng (log cần thấy ở mỗi bước) có trong `docs/HUONG-DAN-TEST-E2E-UPLOAD.md`.
 
 ### 10.4 Chạy không dùng Docker
 
@@ -607,7 +607,6 @@ Những điểm dưới đây là **phạm vi tiếp theo**, không phải lỗi
 contract-intelligence-core/
 ├── docker-compose.yml          # Dựng đủ 10 service
 ├── HUONG-DAN-CHAY.md           # Chạy local
-├── HUONG-DAN-TEST-E2E-UPLOAD.md# Kiểm tra từng chặng
 ├── frontend/                   # React app (mục 3.1, 5)
 ├── backend/                    # FastAPI + worker (mục 3.2, 3.3, 6, 7)
 │   ├── src/contract_intelligence/{contract,extraction,conflict,review,identity,shared}
@@ -618,6 +617,7 @@ contract-intelligence-core/
 │   └── app/                    # AI2 IDP service (mục 3.5)
 ├── keycloak/                   # realm-export.json, theme đăng nhập
 ├── docs/                       # DOC-01..09, contracts/ (JSON schema), ai2/
+│   └── HUONG-DAN-TEST-E2E-UPLOAD.md  # Kiểm tra từng chặng
 └── evals/                      # Bộ chấm điểm tự động
 ```
 
