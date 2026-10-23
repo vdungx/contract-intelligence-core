@@ -11,7 +11,9 @@ Frontend màn `/tong-quan` (`src/pages/OverviewPage.tsx`) đã bỏ mock.
 | Hồ sơ hoạt động   | `GET /api/v1/dossiers?limit=1` → `meta.total`             |
 | Bảng thành viên   | `GET /api/v1/users` (`q`, `role`, `limit`, `offset`)      |
 
-Contract user: [`BE-USER-ADMIN.md`](./BE-USER-ADMIN.md). Contract hồ sơ: mục 2 trong [`API-BE.md`](./API-BE.md).
+API người dùng: mục 18 trong [`API-BE.md`](./API-BE.md#18-quản-lý-người-dùng) (spec canonical:
+[`DOC-05b`](../docs/DOC-05b-frontend-backend-api-contract.md)); vận hành Keycloak:
+[`docs/KEYCLOAK-SETUP.md`](../docs/KEYCLOAK-SETUP.md). Contract hồ sơ: mục 2 trong [`API-BE.md`](./API-BE.md).
 
 Các phần dưới đây **chưa có endpoint**. UI không bịa số và không gọi path giả. Khi backend làm xong, frontend sẽ nối đúng contract này.
 
@@ -85,7 +87,7 @@ Khi có chia sẻ, bổ sung trên `GET /api/v1/users` (không tạo path mới)
 
 ```ts
 type UserDTO = {
-  // các field hiện tại trong BE-USER-ADMIN.md
+  // các field hiện tại trong mục 18 của API-BE.md
   shared_dossier_count: number
 }
 ```

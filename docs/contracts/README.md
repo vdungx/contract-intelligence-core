@@ -23,7 +23,7 @@ schemas below are the canonical Backend↔AI2 transport contract for this phase.
 |---|---|
 | [`ai1.snapshot.v1.schema.json`](ai1.snapshot.v1.schema.json) | Snapshot OCR/layout bất biến của một document |
 
-`packages/contracts/schemas/registry.json` là registry machine-readable tương ứng. Schema legacy, result envelope cũ và catalog edge case không phải contract canonical mới.
+`docs/contracts/*.schema.json` là tập schema machine-readable tương ứng. Schema legacy, result envelope cũ và catalog edge case không phải contract canonical mới.
 
 ## Quy tắc
 

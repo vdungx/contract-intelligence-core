@@ -147,5 +147,5 @@ Không chọn `ai1.result.v0.1` làm contract chính chỉ vì nó đang chạy 
 
 - [Contract AI1–AI2](../contracts/AI1-AI2-CONTRACT.vi.md)
 - [Canonical schema `ai1.snapshot.v1`](../contracts/ai1.snapshot.v1.schema.json)
-- [Handoff AI1 snapshot](AI2-09-ai1-snapshot-handoff.vi.md)
+- [Handoff AI1 snapshot](AI2-DOC-04-architecture.vi.md#32-handoff-canonical-ai1--ai2)
 - [Review output AI1 thực tế](../reviews/AI2-REVIEW-2026-09-22.vi.md)

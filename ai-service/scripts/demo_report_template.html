@@ -230,7 +230,7 @@
   </section>
 </main>
 
-<footer>docs/architecture.md demo &mdash; khong ket noi may chu, PDF ban tai len duoc xu ly hoan toan trong trinh duyet (pdf.js), khong gui di dau. Xem repo root DOC-04 v0.2 de doi chieu thiet ke day du.</footer>
+<footer>Demo OCR/IDP toi gian standalone (khong phai run_idp/FourLayerReasoner/BE /jobs) &mdash; khong ket noi may chu, PDF ban tai len duoc xu ly hoan toan trong trinh duyet (pdf.js), khong gui di dau. Xem docs/ai2/AI2-07-full-pipeline.vi.md phan F cho gioi han; kien truc workspace/demo o docs/ai2/AI2-DOC-04-architecture.vi.md.</footer>
 
 <div class="overlay-loading" id="overlay-loading" hidden>
   <div class="overlay-box">
@@ -248,11 +248,12 @@ if (window.pdfjsLib) {
 }
 
 // --------------------------------------------------------------------------
-// Core fact/clause/citation/comparison pipeline - a JS mirror of
-// contract_ocr.application.use_cases.extract_ai2_facts (the module shared by
-// scripts/demo_ai2_pipeline.py and the backend). Kept deliberately close to
-// that file so the two stay easy to compare; if you change the regexes or
-// heuristics there, mirror the change here too.
+// Core fact/clause/citation/comparison pipeline - a JS mirror of the
+// lightweight demo layer in contract_ocr.application.use_cases.extract_ai2_facts
+// (shared by scripts/demo_ai2_pipeline.py and the web demo, not run_idp or
+// FourLayerReasoner). Kept deliberately close to that file so the two stay
+// easy to compare; if you change the regexes or heuristics there, mirror the
+// change here too.
 // --------------------------------------------------------------------------
 
 function foldDiacritics(text) {
@@ -263,7 +264,8 @@ function foldDiacritics(text) {
     .replace(/[̀-ͯ]/g, "");
 }
 
-// Three heading levels, matching architecture.md section 8.1's node types
+// Three fixed demo heading levels (article/clause/point), matched by regex;
+// not a production structure classifier.
 // (article/clause/point). ARTICLE_RE only fires on a literal "Dieu N."/"Muc N.";
 // CLAUSE_RE/POINT_RE only get a chance once we're already inside an article,
 // otherwise an ordinary sentence that happens to start with "1. " or "a) " in
@@ -272,7 +274,7 @@ const ARTICLE_RE = /^(Dieu|Muc)\s+(\d+)\.?\s*(.*)$/d;
 const CLAUSE_RE = /^(?:Khoan\s+)?(\d+)\.\s*(.*)$/d;
 const POINT_RE = /^([a-zA-Z])\)\s*(.*)$/d;
 
-// Field set matches architecture.md section 27.11's Sprint-1 MVP list
+// Selected demo fields only
 // (parties, amount, date, payment term). Party names use PARTY_RE separately
 // because the field name ("party_a" vs "party_b") comes from a captured
 // group, not a fixed string like the others.
@@ -283,7 +285,7 @@ const FACT_PATTERNS = [
 ];
 const PARTY_RE = /^Ben\s+([AB])\s*[:\-]\s*(.+)$/d;
 
-// Stand-in for architecture.md section 27.2's "Classification" output
+// Very small demo classifier: first-page keyword sniffing, not evidence-based.
 // (contract/appendix/other + confirmed/needs_review) - first-page keyword
 // sniffing, same simplification as classify_document() in extract_ai2_facts.py.
 const CLASSIFICATION_KEYWORDS = [["PHU LUC", "appendix"], ["HOP DONG", "contract"]];
@@ -495,14 +497,14 @@ function normalizeFact(factType, raw, match) {
   }
   if (factType === "duration_days") return { days: parseInt(match[1], 10) };
   // "date": kept as the raw matched string, not parsed - dd/mm/yyyy vs
-  // mm/dd/yyyy is genuinely ambiguous without a locale (architecture.md
-  // section 8.3 warns against guessing that).
+  // mm/dd/yyyy is genuinely ambiguous without a locale; this demo does not
+  // guess.
   return { raw };
 }
 
 function factConfidence(anchorPrecision) {
-  // Signals, not a fabricated probability - section 27.8 is explicit that an
-  // unexplained confidence=0.98 shouldn't be read as 98% accurate.
+  // Signals, not a fabricated probability - score stays null/uncalibrated, so
+  // it must not be read as accuracy.
   const isWord = anchorPrecision === "word";
   return {
     score: null,
@@ -519,8 +521,8 @@ function findingConfidence(isMatch, contractFact, annexFact) {
   const reasonCodes = [];
   if (!isMatch) reasonCodes.push("VALUE_MISMATCH");
   if (priorities.has("medium")) reasonCodes.push("LINE_LEVEL_ANCHOR_ONLY");
-  // A difference always gets reviewed regardless of anchor quality - section
-  // 27.8: critical money/date/MST disagreement is always reviewed.
+  // A difference always gets reviewed regardless of anchor quality - a
+  // critical money/date/MST disagreement must not be hidden by a high score.
   const reviewPriority = !isMatch ? "high" : ([...priorities].some((p) => p !== "low") ? "medium" : "low");
   return { score: null, calibrated: false, calibration_version: null, review_priority: reviewPriority, reason_codes: reasonCodes };
 }
@@ -845,7 +847,7 @@ function renderEvaluation(data) {
   ];
   evaluationBody.innerHTML =
     rows.map(([label, value]) => `<div class="eval-stat"><span>${label}</span><span>${value}</span></div>`).join("") +
-    '<div class="uploader-note" style="margin-top:10px;">Day la thong ke tren 1 lan chay, KHONG phai accuracy/F1 - chua co ground truth nap vao de doi chieu. Xem docs/architecture.md muc 16 cho thiet ke evaluation day du (can dataset da gan nhan).</div>';
+    '<div class="uploader-note" style="margin-top:10px;">Day la thong ke tren 1 lan chay, KHONG phai accuracy/F1 - chua co ground truth nap vao de doi chieu. Xem docs/ai2/AI2-07-full-pipeline.vi.md phan D cho gioi han danh gia (can dataset da gan nhan).</div>';
 }
 
 function renderDossier(data, sourceLabel) {

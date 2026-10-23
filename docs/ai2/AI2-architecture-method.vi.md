@@ -26,7 +26,7 @@ Nguồn sự thật khi review theo thứ tự:
 | SEI Views and Beyond | Cách viết từng view: purpose, elements, relations, constraints, rationale và consistency với view khác | Mỗi phần C0–C4, input boundary, extraction và reasoning có mục tiêu/notation/giới hạn |
 | Rozanski & Woods | Catalog viewpoint và perspective để kiểm tra đủ stakeholder concern, không bỏ quên information, operation, security, performance và evolution | Context, functional, information, deployment, operational và các cross-cutting perspective |
 | TOGAF / ArchiMate | Đặt AI2 trong bối cảnh enterprise và biểu diễn quan hệ business/application/technology khi cần | Chỉ dùng cho boundary với DMS/BE/AI1/NineRouter; không dùng để biến demo thành enterprise platform |
-| IEEE 1016 | Kỷ luật của Software Design Description ở mức component, interface, data, behavior, dependency và traceability | `AI2-05`, API matrix, component contracts, data model và code mapping |
+| IEEE 1016 | Kỷ luật của Software Design Description ở mức component, interface, data, behavior, dependency và traceability | `AI2-DOC-04`, API matrix, component contracts, data model và code mapping |
 
 ### 2.1. Điều không làm
 
@@ -53,11 +53,10 @@ Nguồn sự thật khi review theo thứ tự:
 
 | Tài liệu | Vai trò |
 |---|---|
-| `AI2-DOC-04-architecture.vi.md` | Architecture description chính theo 42010; index toàn bộ view |
-| `AI2-05-architecture.vi.md` | SDD/component view theo IEEE 1016 |
-| `AI2-08-architecture-c0-c4.vi.md` | Nhóm view C0–C4 theo 4+1 và boundary theo ArchiMate |
-| `AI2-10-current-flow.vi.md` | Scenario/process view theo từng bước input → xử lý → output |
-| `AI2-09-ai1-snapshot-handoff.vi.md` | Contract và information view của AI1 → AI2 |
+| `AI2-DOC-04-architecture.vi.md` | Architecture description của AI2 workspace/demo components theo 42010; component/SDD view theo IEEE 1016, nhóm view C0–C4 và boundary (full product: DOC-04 + contract Backend–AI2) |
+| `AI2-07-full-pipeline.vi.md` | Scenario/process view theo từng bước input → xử lý → output → failure |
+| `AI2-06-implementation-gap.vi.md` | Gap/coverage so với target, không phải current-state thay thế |
+| Contract AI1–AI2 trong `docs/contracts/` | Contract và information view của AI1 → AI2 |
 | `diagrams/*.mmd` | Sẽ được tổ chức lại trong đợt chuẩn hóa diagrams; không phải source of truth độc lập |
 
 ## 5. Quy tắc review consistency

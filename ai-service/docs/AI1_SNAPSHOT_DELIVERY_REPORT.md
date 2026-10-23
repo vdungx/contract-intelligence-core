@@ -22,7 +22,7 @@
 1. `blocks[]` luôn rỗng — chưa có logic gộp heading/paragraph. Schema đã sẵn sàng để AI2 code song song phần đọc. (`tables[]` từng rỗng ở bản này — đã lấp sau ngày báo cáo, xem ghi chú cập nhật đầu file.)
 2. Trang scan qua Paddle hiện chỉ có bbox **cấp dòng**, chưa có bbox cấp từ (word).
 3. Trạng thái `PARTIAL` ("OCR một phần") hiện dùng 2 heuristic tạm của AI1, chưa có tín hiệu thật từ engine — cần AI2 xác nhận có chấp nhận được không.
-4. Quy ước `page_image_ref.uri` (`storage://ocr/...`) và ID dòng/từ — cần đối chiếu với layout storage đã phác thảo ở `architecture.md` trước khi 2 bên code cứng vào từng chỗ.
+4. Quy ước `page_image_ref.uri` (`storage://ocr/...`) và ID dòng/từ — quy ước `storage://ocr/{snapshot_id}/...` trong schema/artifact là hiện hành; layout object storage `runs/{run_id}/...` chỉ là đề xuất cũ đã bị thay thế, xem [AI2-DOC-04 §12](../../docs/ai2/AI2-DOC-04-architecture.vi.md#12-lịch-sử-và-đề-xuất-đã-bị-thay-thế).
 
 Chi tiết đầy đủ từng điểm: xem `docs/AI1_OCR_SNAPSHOT_HANDOFF_RESPONSE.md` mục 4-9.
 

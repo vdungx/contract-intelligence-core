@@ -79,7 +79,7 @@ Frontend chạy tại `http://127.0.0.1:5500`, tự mở trình duyệt. Dòng n
 - **Gemini 3 Flash (Vision)** — ⚠️ tương tự OpenAI nhưng gửi lên Google Gemini. Trong test nội bộ, độ chính xác tiếng Việt (giữ đúng dấu) tốt và nhanh (~30s/trang).
 - **Mistral OCR (Document AI)** — ⚠️ tương tự nhưng gửi lên Mistral, qua endpoint OCR chuyên dụng (`mistral-ocr-4`, `POST /v1/ocr`) chứ không phải chat completion như 2 engine trên. Vì vậy engine này **không** đi qua system prompt chống bịa dùng chung cho 2 engine kia (xem cảnh báo ở cuối mục dưới), tự trả bảng có cấu trúc (`Table → Row → Cell`) thay vì để nguyên `| a | b |` lẫn trong text, và là engine duy nhất hiện đọc được cả bảng không viền. Đây là engine đang dùng thật trong sản phẩm (backend `mistral_vision_only`).
 
-File PDF upload chỉ lưu tạm ở backend lúc xử lý rồi xoá ngay; ngoại trừ 3 engine gửi ảnh ra ngoài (OpenAI/Gemini/Mistral API), không gửi đi đâu ngoài hai máy chủ cục bộ này. Xem [mục 10](#10-demo-ai2-phân-loại-cấu-trúc-fact-citation-xung-đột-confidence-docsarchitecturemd) để biết chi tiết field/giới hạn của lớp AI2 (chung code với endpoint này, ở `src/contract_ocr/application/use_cases/extract_ai2_facts.py`) và cách chạy bản CLI/hoàn toàn-trong-trình-duyệt không cần backend.
+File PDF upload chỉ lưu tạm ở backend lúc xử lý rồi xoá ngay; ngoại trừ 3 engine gửi ảnh ra ngoài (OpenAI/Gemini/Mistral API), không gửi đi đâu ngoài hai máy chủ cục bộ này. Xem [mục 10](#10-demo-ocridp-tối-giản-standalone-phân-loại-cấu-trúc-fact-citation-xung-đột-confidence) để biết chi tiết field/giới hạn của lớp AI2 (chung code với endpoint này, ở `src/contract_ocr/application/use_cases/extract_ai2_facts.py`) và cách chạy bản CLI/hoàn toàn-trong-trình-duyệt không cần backend.
 
 ### Công cụ phụ: xem OCR thô từng dòng (debug engine)
 
@@ -298,28 +298,28 @@ Sinh nhanh một dossier mẫu đầy đủ (hợp đồng TEXT_LAYER + phụ l�
 uv run python scripts/export_snapshot_demo.py
 ```
 
-## 10. Demo AI2: phân loại, cấu trúc, fact, citation, xung đột, confidence (`docs/architecture.md`)
+## 10. Demo OCR/IDP tối giản standalone: phân loại, cấu trúc, fact, citation, xung đột, confidence
 
-Lớp AI2 mô tả ở `docs/architecture.md` §5-9 và §27 sống ở một chỗ duy nhất — `src/contract_ocr/application/use_cases/extract_ai2_facts.py` — và có **ba cách chạy** tuỳ nhu cầu:
+**Đây là demo OCR/IDP tối giản standalone**, không phải `app.pipeline.idp`/`run_idp`, không dùng `FourLayerReasoner`, không phải luồng Backend `/jobs` + PostgreSQL. Demo tái dùng `ai1.snapshot.v1` rồi chạy một lớp regex/classification/compare nhỏ; logic dùng chung nằm ở `src/contract_ocr/application/use_cases/extract_ai2_facts.py`. Có **ba cách chạy** tuỳ nhu cầu; giới hạn chi tiết ở [AI2-07 §F](../docs/ai2/AI2-07-full-pipeline.vi.md#f-demo-ocridp-tối-giản-riêng), kiến trúc workspace/demo ở [AI2-DOC-04](../docs/ai2/AI2-DOC-04-architecture.vi.md).
 
-| Cách chạy | Dùng khi nào | OCR engine | Đủ tính năng mới nhất? |
+| Cách chạy | Dùng khi nào | OCR engine | Đủ tính năng demo? |
 | --- | --- | --- | --- |
 | `frontend/index.html` + backend (mục "Chạy nhanh" ở trên) | Muốn dùng UI, cần đọc cả PDF scan | Mọi engine đã cấu hình ở backend (PyMuPDF/Vision API) | Có — cây Điều/Khoản/Điểm, confidence, N phụ lục, Evaluation, "Sửa" |
 | `scripts/demo_ai2_pipeline.py --contract ...` | Muốn chạy dòng lệnh / không cần UI | `--engine none` (native) hoặc `--engine mistral` | Có — cùng module dùng chung, `--annex` lặp lại được nhiều lần |
 | Kéo-thả PDF thẳng vào `demo_report.html` đã sinh ra | Muốn xem nhanh, không cần chạy backend | Chỉ đọc được PDF native (pdf.js, chạy trong trình duyệt) | Có — cùng logic JS mirror, cây Điều/Khoản/Điểm, confidence, N phụ lục, Evaluation, "Sửa"; PDF scan vẫn không đọc được vì không có OCR trong trình duyệt |
 
-Luồng chính ở cả ba cách là **tải một PDF hợp đồng**, tự động ra output IDP theo đúng slice tối thiểu ở §27.11 — 0..N phụ lục là bổ sung, không bắt buộc, không có nút bật/tắt "so sánh" riêng. Output khớp các mục trong bảng "Output người dùng yêu cầu" ở §27.2:
+Luồng chính ở cả ba cách là **tải một PDF hợp đồng**; 0..N phụ lục là bổ sung, không bắt buộc, không có nút bật/tắt "so sánh" riêng. Demo xuất các mục sau (không phải output contract đầy đủ):
 
 - **Input processing**: 1 contract + 0..N appendix, PDF native hoặc scan (tuỳ engine).
-- **Classification**: `contract`/`appendix`/`other` theo từ khoá trang đầu.
-- **Clause extraction**: cây `Dieu` → `Khoan` → `Diem` (mỗi clause có `parent_clause_id`), không chỉ Điều phẳng.
-- **Structured extraction**: field MVP `parties` (bên A/B), `amount`, `date`, `payment term`.
-- **Citation**: mỗi fact/finding có document hash + trang/dòng/bbox/quote.
-- **Conflict detection**: so hợp đồng với từng phụ lục độc lập, kết quả gắn `annex_filename` để không gộp lẫn khi có nhiều phụ lục.
-- **Confidence**: object `{signals, review_priority}` theo tín hiệu (anchor precision, có mismatch hay không) — không phải xác suất bịa, đúng cảnh báo ở §27.8.
-- **Human review**: hành động "Sửa" trên `index.html` — chỉ sửa trong phiên trình duyệt, không lưu.
+- **Classification**: `contract`/`appendix`/`other` bằng keyword trang đầu.
+- **Clause extraction**: regex cố định `Dieu` → `Khoan` → `Diem` (mỗi clause có `parent_clause_id`), không phải classifier cấu trúc đầy đủ.
+- **Structured extraction**: field chọn lọc `parties` (bên A/B), `amount`, `date`, `payment term`.
+- **Citation**: mỗi fact/finding có document hash + trang/dòng/bbox/quote, nhúng inline.
+- **Conflict detection**: so hợp đồng với từng phụ lục độc lập (contract-vs-một-annex), kết quả gắn `annex_filename`; không ngầm so annex-vs-annex.
+- **Confidence**: object `{signals, review_priority}` theo tín hiệu anchor/mismatch — `score` null và không calibrated, không phải xác suất.
+- **Human review**: hành động "Sửa" trên `index.html` — chỉ sửa trong phiên trình duyệt, không lưu, không audit bền vững.
 - **Evaluation report**: tab đếm N theo review_priority, nói rõ chưa có ground truth nên chưa có accuracy/F1 thật.
 
-Những gì **chưa có** (ghi rõ để không hiểu nhầm là đã đủ): bảng scan không viền khi dùng engine `openai`/`gemini` (chưa tự trả bảng có cấu trúc, rơi về detector pixel chỉ bắt bảng có đường kẻ), evaluation report thật cần ground truth gán nhãn, human review có lưu trữ/persist, và `extract_ai2_facts.py` (lớp AI2 của demo web) hiện chỉ đọc `page.lines`, chưa đọc `page.tables` — một fact nằm trong bảng sẽ không được trích ra dù engine đã đọc đúng bảng đó. Snapshot AI1 hiện đã có bảng native (PyMuPDF), bảng scan có đường kẻ (`openai`/`gemini`), và bảng scan bất kỳ dạng nào qua engine `mistral` (đọc trực tiếp bảng markdown Mistral tự phân đoạn) — cộng cơ chế nối bảng qua trang 3 tầng (hard guard → rule score → agent DeepSeek tùy chọn); xem [AI1 team handoff](docs/AI1_TEAM_HANDOFF.md) để biết giới hạn và luồng tích hợp.
+Những gì **chưa có** (ghi rõ để không hiểu nhầm là đã đủ): bảng scan không viền khi dùng engine `openai`/`gemini` (chưa tự trả bảng có cấu trúc, rơi về detector pixel chỉ bắt bảng có đường kẻ), evaluation report thật cần ground truth gán nhãn, human review có lưu trữ/persist/audit bền vững, và `extract_ai2_facts.py` (lớp demo) hiện chỉ đọc `page.lines`, chưa đọc `page.tables` — một fact nằm trong bảng sẽ không được trích ra dù engine đã đọc đúng bảng đó. Snapshot AI1 hiện đã có bảng native (PyMuPDF), bảng scan có đường kẻ (`openai`/`gemini`), và bảng scan bất kỳ dạng nào qua engine `mistral` (đọc trực tiếp bảng markdown Mistral tự phân đoạn) — cộng cơ chế nối bảng qua trang 3 tầng (hard guard → rule score → agent DeepSeek tùy chọn); xem [AI1 team handoff](docs/AI1_TEAM_HANDOFF.md) để biết giới hạn và luồng tích hợp.
 
 Chạy `uv run python scripts/demo_ai2_pipeline.py` (không tham số) để lấy demo dữ liệu tổng hợp, hoặc `--contract path/to/file.pdf` để thử PDF thật, thêm `--annex path/to/file2.pdf` (lặp lại nhiều lần để có nhiều phụ lục, đều tuỳ chọn — xem docstring đầu file để biết chi tiết/giới hạn). Kết quả là một `demo_report.html` tĩnh, tự chứa, mở thẳng bằng trình duyệt.

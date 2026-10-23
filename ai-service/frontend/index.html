@@ -182,7 +182,7 @@
 <div class="app-bar">
   <div>
     <h1>Contract Intelligence &mdash; IDP Demo</h1>
-    <div class="subtitle">Upload PDF -&gt; OCR engine da chon &mdash; Xem docs/architecture.md DOC-04 v0.2 &mdash; <a href="ocr_raw.html">cong cu debug OCR tho</a></div>
+    <div class="subtitle">Upload PDF -&gt; OCR engine da chon &mdash; Demo OCR/IDP toi gian standalone (khong phai run_idp/FourLayerReasoner/BE /jobs) &mdash; Xem docs/ai2/AI2-07-full-pipeline.vi.md phan F &mdash; <a href="ocr_raw.html">cong cu debug OCR tho</a></div>
   </div>
   <span class="tag" id="backend-tag">dang ket noi backend...</span>
 </div>
@@ -237,7 +237,7 @@
   </section>
 </main>
 
-<footer>docs/architecture.md demo &mdash; PDF gui len backend cuc bo (127.0.0.1) de OCR/phan tich, khong gui di dau khac. Xem repo root DOC-04 v0.2 de doi chieu thiet ke day du.</footer>
+<footer>Demo OCR/IDP toi gian standalone (khong phai run_idp/FourLayerReasoner/BE /jobs) &mdash; PDF gui len backend cuc bo (127.0.0.1) de OCR/phan tich, khong gui di dau khac. Xem docs/ai2/AI2-07-full-pipeline.vi.md phan F va docs/ai2/AI2-DOC-04-architecture.vi.md (workspace/demo).</footer>
 
 <div class="overlay-loading" id="overlay-loading" hidden>
   <div class="overlay-box">
@@ -413,7 +413,7 @@ function renderEvaluation(data) {
   ];
   evaluationBody.innerHTML =
     rows.map(([label, value]) => `<div class="eval-stat"><span>${label}</span><span>${value}</span></div>`).join("") +
-    '<div class="uploader-note" style="margin-top:10px;">Day la thong ke tren 1 lan chay, KHONG phai accuracy/F1 - chua co ground truth nap vao de doi chieu. Xem docs/architecture.md muc 16 cho thiet ke evaluation day du (can dataset da gan nhan).</div>';
+    '<div class="uploader-note" style="margin-top:10px;">Day la thong ke tren 1 lan chay, KHONG phai accuracy/F1 - chua co ground truth nap vao de doi chieu. Xem docs/ai2/AI2-07-full-pipeline.vi.md phan D cho gioi han danh gia (can dataset da gan nhan).</div>';
 }
 
 function renderDossier(data) {

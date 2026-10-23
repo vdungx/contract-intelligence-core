@@ -1,6 +1,10 @@
-# System Architecture
+# System Architecture — snapshot lịch sử AI2 (2026-09-25)
 
-> Bản đồ current-state đối chiếu với repository ngày 2026-09-25. Protocol HITL/live và tên framework trong plan chỉ được xem là implemented khi có code wiring và test tương ứng.
+> **Snapshot lịch sử có giới hạn, không phải runtime hiện tại.** Bản đồ này chụp repository ngày 2026-09-25; chỉ các default cờ contract graph được cập nhật ngày 23/10/2026. Nó có thể nhắc path/type không còn tồn tại (ví dụ `packages/typescript/`) và mô tả thiếu SSE/live event. Không dùng tài liệu này làm mô tả authoritative của full-stack runtime.
+>
+> Tích hợp hiện tại: [README gốc](../README.md) và [backend README](../backend/README.md). Kiến trúc sản phẩm: [DOC-04](DOC-04-architecture.md). Contract AI1–AI2: [AI1-AI2-CONTRACT](contracts/AI1-AI2-CONTRACT.vi.md).
+>
+> Protocol HITL/live và tên framework trong plan chỉ được xem là implemented khi có code wiring và test tương ứng.
 
 ## Overview và ownership
 
@@ -39,11 +43,11 @@ Backend request → verify signed service envelope/ACL → validate snapshots/id
 
 ### Contract graph (luồng 1, operation-first) — sau cờ
 
-`AI2_CONTRACT_GRAPH_ENABLED` (mặc định tắt; đọc một lần mỗi lượt `run_idp`). Bật: `app/pipeline/contract_graph/` đọc câu thao tác tường minh, resolve địa chỉ đích tới node có thật (UNIQUE/AMBIGUOUS/NOT_FOUND, không đoán), sinh cạnh `INSERTION/SUBSTITUTION/REPEAL/REJECTION/SCOPE_LIMIT` deterministic (không LLM), mặc định `NEEDS_REVIEW`. Ra BE chỉ dưới dạng finding `AMENDS` + `index_contribution.coverage.contract_graph`; contract `ai2.be.processing.result.v1` không đổi. Cạnh lưu ở `ai2.contract_edges` (migration `0005`), ghi trong transaction `PostgresJobStore.complete_with_snapshot` trong savepoint, chỉ cho job SUCCEEDED mới nhất; lỗi ghi cạnh không làm FAILED job. Tắt: output `run_idp` khớp golden flag-off. Đo bằng `evals/contract_graph/`; chi tiết `docs/ai2/AI2-19-contract-graph-operation-first.vi.md`.
+`AI2_CONTRACT_GRAPH_ENABLED` (mặc định **bật** trong source và full Compose profile; operator có thể override `false`; đọc một lần mỗi lượt `run_idp`). Bật: `app/pipeline/contract_graph/` đọc câu thao tác tường minh, resolve địa chỉ đích tới node có thật (UNIQUE/AMBIGUOUS/NOT_FOUND, không đoán), sinh cạnh `INSERTION/SUBSTITUTION/REPEAL/REJECTION/SCOPE_LIMIT` deterministic (không LLM), mặc định `NEEDS_REVIEW`. Ra BE chỉ dưới dạng finding `AMENDS` + `index_contribution.coverage.contract_graph`; contract `ai2.be.processing.result.v1` không đổi. Cạnh lưu ở `ai2.contract_edges` (migration `0005`), ghi trong transaction `PostgresJobStore.complete_with_snapshot` trong savepoint, chỉ cho job SUCCEEDED mới nhất; lỗi ghi cạnh không làm FAILED job. Tắt: output `run_idp` khớp golden flag-off. Cờ bật không phải bằng chứng graph/inference/DB row đã chạy trong môi trường deploy. Đo bằng `evals/contract_graph/`; chi tiết `docs/ai2/AI2-19-contract-graph-operation-first.vi.md`.
 
 ### Contract graph (luồng 2, phân loại cặp) — sau cờ
 
-`AI2_CONTRACT_GRAPH_PAIRS_ENABLED` chỉ có hiệu lực cùng cờ luồng 1. Sau khi dựng context và issue luồng 1, builder sinh ứng viên cấu trúc, kiểm consent từ `policy_flags.egress_allowed` AND egress runtime rồi phân loại/grounding bằng model Claude. Quan hệ `GENERAL_SPECIFIC/CONFLICT/DUPLICATE/REFERENCE` luôn `NEEDS_REVIEW`; chỉ `CONFLICT` chiếu tối đa 5 candidate `COMPARABLE_DIFFERENCE` với citation cả node đã kiểm. Pairs không mở khóa fact comparison hoặc thay context. Wire giữ schema hiện có; thống kê trong coverage, quan hệ trong `ai2.contract_pair_relations` (migration `0006`). PostgreSQL thay dòng dưới fence job SUCCEEDED mới nhất và savepoint riêng khi đã hoàn tất lô LLM hoặc consent bị thu hồi; cờ tắt/lỗi provider giữ dòng cũ. Chi tiết và rollback dừng mọi process trước downgrade: `docs/ai2/AI2-20-contract-graph-pairs.vi.md`. Cờ mặc định tắt, quyết định bật còn phụ thuộc P5.
+`AI2_CONTRACT_GRAPH_PAIRS_ENABLED` chỉ có hiệu lực cùng cờ luồng 1; mặc định **bật** trong source và full Compose profile, operator có thể override `false`. Sau khi dựng context và issue luồng 1, builder sinh ứng viên cấu trúc, kiểm consent từ `policy_flags.egress_allowed` AND egress runtime rồi phân loại/grounding bằng model Claude. Quan hệ `GENERAL_SPECIFIC/CONFLICT/DUPLICATE/REFERENCE` luôn `NEEDS_REVIEW`; chỉ `CONFLICT` chiếu tối đa 5 candidate `COMPARABLE_DIFFERENCE` với citation cả node đã kiểm. Pairs không mở khóa fact comparison hoặc thay context. Wire giữ schema hiện có; thống kê trong coverage, quan hệ trong `ai2.contract_pair_relations` (migration `0006`). PostgreSQL thay dòng dưới fence job SUCCEEDED mới nhất và savepoint riêng khi đã hoàn tất lô LLM hoặc consent bị thu hồi; cờ tắt/lỗi provider giữ dòng cũ. Bật capability không chứng minh classifier đã gọi hoặc pair relation đã tạo; deployment thật vẫn phải kiểm tra consent/egress/model/budget. Chi tiết và rollback dừng mọi process trước downgrade: `docs/ai2/AI2-20-contract-graph-pairs.vi.md`.
 
 ### Workspace và package lane
 

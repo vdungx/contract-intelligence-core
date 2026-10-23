@@ -5,13 +5,13 @@
 | Thuộc tính | Nội dung |
 |---|---|
 | Mã tài liệu / sản phẩm | DOC-04 / Contract Intelligence (PROD-01) |
-| Phiên bản / trạng thái | v0.8.0 — Draft · Ready for Review (SemVer) |
+| Phiên bản / trạng thái | v0.8.1 — Draft · Ready for Review (SemVer) |
 | Owner / Contributors | Architecture Lead / Backend, AI1, AI2, Frontend, QA |
 | Reviewer | Mentor |
-| Ngày hiệu lực / review | 17/09/2026 / TBD |
+| Ngày hiệu lực / review | 23/10/2026 / TBD |
 | Upstream | DOC-01, DOC-02, DOC-03, `contracts/` canonical |
 | Downstream | DOC-05 API (v0.3.0), DOC-04b Schema (v1.2.0), DOC-04c ERD (v1.2.0), DOC-06 evaluation |
-| Thay thế | Architecture cũ trong `docs/archive/` — chỉ legacy/audit |
+| Thay thế | Architecture cũ trong `docs/archive/` — chỉ legacy/audit. Các đề xuất AI2 cũ (`ai-service/architecture.md`, `ai-service/docs/CONTRACT_INTELLIGENCE_ARCHITECTURE.md`, `docs/ai2/AI2-05-architecture.vi.md`, `AI2-08-architecture-c0-c4.vi.md`, `AI2-09-ai1-snapshot-handoff.vi.md`, `AI2-10-current-flow.vi.md`) đã gộp vào `docs/ai2/AI2-DOC-04-architecture.vi.md` và `docs/ai2/AI2-07-full-pipeline.vi.md` — chỉ tham khảo lịch sử |
 
 ## Mục lục
 
@@ -985,6 +985,7 @@ Theo [DOCUMENT-GOVERNANCE.md](governance/DOCUMENT-GOVERNANCE.md), mọi thay đ�
 
 | Ngày | Phiên bản | Thay đổi | Lý do | Ảnh hưởng | Tài liệu đã đồng bộ | Owner |
 |---|---|---|---|---|---|---|
+| 2026-10-23 | v0.8.1 | Gộp các đề xuất AI2 cũ vào `docs/ai2/AI2-DOC-04-architecture.vi.md` và `docs/ai2/AI2-07-full-pipeline.vi.md`; xoá `ai-service/architecture.md`, `ai-service/docs/CONTRACT_INTELLIGENCE_ARCHITECTURE.md`, `docs/ai2/AI2-05-architecture.vi.md`, `AI2-08-architecture-c0-c4.vi.md`, `AI2-09-ai1-snapshot-handoff.vi.md`, `AI2-10-current-flow.vi.md`. | Nhiều bản kiến trúc AI2 trùng lặp, dễ đọc nhầm bản cũ là hiện hành. | Không đổi policy/ADR; chỉ hợp nhất tài liệu và sửa default flag graph theo code. | AI2-DOC-04, AI2-07, `docs/ai2/README.md`, `docs/system-architecture.md`. | Architecture Lead |
 | 2026-09-29 | v0.8.0 | ADR-05: bản chuyển giao trên dây Backend → AI2 là `ai1.snapshot.v1`; v3 chỉ ở adapter của Backend. Thêm ADR-14 (được chấp nhận 30/09) sửa một phần ADR-02 cho trạng thái riêng của AI2 trong schema `ai2`. | ADR-05 lệch code và BE-AI2 §5.1; ADR-02 mâu thuẫn DOC-11 §3 (review của Trang ở PR #37). | §2 (ADR-02, ADR-05, ADR-14). | DOC-04, `contracts/DEC-BE-AI2-01-contract-decisions.vi.md`, `contracts/BE-AI2-PROCESSING-CONTRACT.vi.md` §6. | Backend (soạn); Trang (Lead) chấp nhận ADR-14 ngày 30/09 |
 | 2026-09-17 | v0.7.0 | Chốt kiến trúc Enterprise: Bearer JWT + `X-Tenant-Id` + `x-rbac` (`OPERATOR`, `REVIEWER`, `ADMINISTRATOR`); bao phủ 9 phân hệ (Dossiers, Documents, Manifest confirmation, Runs, Batches, Re-OCR, External Approvals, Review revisions, Optimization Loop). | Đồng bộ toàn diện với DOC-05 API Spec v0.3.0 và PostgreSQL Schema v1.2.0. | §1, §2 (ADR-13), §3, §4, §9, §10, §11, §13, §20. | DOC-04, DOC-05 (v0.3.0), DOC-04b (v1.2.0), DOC-04c (v1.2.0). | Architecture Lead + Backend |
 | 2026-09-17 | v0.6.0 | ADR-01: backend từ Java 17/Spring Boot 3 sang Python 3.12/FastAPI; Flyway → Alembic; Maven → pyproject. | Team backend đã dựng skeleton FastAPI trên `feature/backend-setup`; một ngôn ngữ cho toàn stack giảm chi phí bàn giao OJT. | DOC-03 CON-02 (vẫn monolith DDD), NFR-06; không đổi business rule. | README gốc, `backend/README.md`, `ai-service/README.md`, DOC-03, DOC-05, `contracts/`, AI2 pipeline, archive manifest. | Architecture Lead + Backend |

@@ -3,7 +3,7 @@
 **Trạng thái:** ĐỀ XUẤT — chưa triển khai vào `ai-service`. Đã có spike đo được (`evals/spikes/clause_key/`), đã qua critique 5 góc nhìn (verdict **BLOCKED**, advisory).
 **Ngày:** 2026-10-01
 **Quyết định ràng buộc:** DEC-dungskbg2004-1, DEC-dungskbg2004-3, DEC-dungskbg2004-4, DEC-dungskbg2004-5 (`docs/decisions.md`)
-**Đọc trước:** [AI2-15](AI2-15-contract-profiles-structure-relations-and-free-form-qa.vi.md) (profile, cây cấu trúc, relation graph), [AI2-01](AI2-01-business-policy-perspective.vi.md) (tenant, dữ liệu), [AI2-10](AI2-10-current-flow.vi.md) (luồng hiện tại).
+**Đọc trước:** [AI2-15](AI2-15-contract-profiles-structure-relations-and-free-form-qa.vi.md) (profile, cây cấu trúc, relation graph), [AI2-01](AI2-01-business-policy-perspective.vi.md) (tenant, dữ liệu), [AI2-07](AI2-07-full-pipeline.vi.md) (luồng hiện tại).
 
 Nhãn bằng chứng: **OBSERVED** (đã đo/đọc), `[ASSUMED]` (chưa kiểm).
 

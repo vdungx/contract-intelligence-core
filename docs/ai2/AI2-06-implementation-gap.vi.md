@@ -6,7 +6,7 @@
 
 Lớp 20/09: gold HD hai nguồn (`fixtures/gold/hd_tong_hop_findings.json`); finding = thân↔phụ lục cùng `item_key`; review overlay session; SQLite lát mỏng `data/ai2` (không thay BE ACL). Coverage ≠ độ chính xác. OCR/RLS vẫn Ngoài AI2; vector recall hiện là capability tuỳ chọn, có discovery NineRouter và SQLite demo, chưa phải pgvector production. NineRouter dùng catalog riêng `/v1/models/embedding` (không chỉ `/v1/models`); runtime đã xác nhận `openrouter/openai/text-embedding-3-small` hoạt động với 1536 chiều. Cấu hình runtime hiện bật vector recall mặc định; demo/store SQLite không đồng nghĩa đã có pgvector production. Fixture catalog có đủ EC-001..EC-056 nhưng không phải tất cả đã chạy end-to-end.
 
-Nguồn: [AI2-01](AI2-01-business-policy-perspective.vi.md) … [AI2-05](AI2-05-architecture.vi.md), [AI2-04](AI2-04-edge-case-test-matrix.vi.md).
+Nguồn: [AI2-01](AI2-01-business-policy-perspective.vi.md) … [AI2-DOC-04](AI2-DOC-04-architecture.vi.md), [AI2-04](AI2-04-edge-case-test-matrix.vi.md).
 
 ## Cập nhật mục tiêu AI2 [2026-09-23]
 

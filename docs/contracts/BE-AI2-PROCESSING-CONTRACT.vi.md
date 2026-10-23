@@ -16,7 +16,6 @@ Schema authority:
 
 - [Backend → AI2 request schema](be.ai2.processing.request.v1.schema.json)
 - [AI2 → Backend result schema](ai2.be.processing.result.v1.schema.json)
-- [Contract registry](../../packages/contracts/schemas/registry.json)
 
 ## 2. Backend → AI2: processing request
 

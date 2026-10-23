@@ -98,7 +98,7 @@ Không đổi — AI1 xác nhận lại: trích fact nghiệp vụ, ghép contra
 
 - [ ] Định nghĩa "OCR một phần" (`PARTIAL`) ở mục 5 hiện là heuristic tạm của AI1 (`missing_line_geometry`, `low_confidence_lines`, ngưỡng confidence 0.5) — AI2 có cần thêm/đổi tín hiệu khác không?
 - [ ] Quy ước ID `{document_id}:s{major}:p{page}:l{seq}` — AI2 xác nhận chỉ cần ID ổn định/duy nhất trong 1 snapshot (không parse cấu trúc bên trong), hay cần format khác để khớp DB/index phía Backend?
-- [ ] `page_image_ref.uri` hiện dùng `storage://ocr/{snapshot_id}/page-{n}.png` theo đúng ví dụ trong tài liệu gốc — cần đối chiếu với layout object storage đã phác thảo ở `architecture.md` (`runs/{run_id}/pages/{page_number}/...`) để không có 2 quy ước song song.
+- [ ] `page_image_ref.uri` hiện dùng `storage://ocr/{snapshot_id}/page-{n}.png` theo đúng ví dụ trong tài liệu gốc — quy ước này là hiện hành trong schema/artifact; layout `runs/{run_id}/pages/{page_number}/...` chỉ là đề xuất cũ đã bị thay thế, xem [AI2-DOC-04 §12](../../docs/ai2/AI2-DOC-04-architecture.vi.md#12-lịch-sử-và-đề-xuất-đã-bị-thay-thế).
 - [x] `tables[]` — AI1 đã làm, xem mục 4.
 - [ ] Timeline `blocks[]` — ai làm, làm khi nào (xem mục 4).
 - [ ] Word-level bbox cho SCANNED_OCR (hiện Paddle chỉ có line-level) — có bắt buộc phải có trước khi AI2 tích hợp, hay AI2 chấp nhận line-level trước?

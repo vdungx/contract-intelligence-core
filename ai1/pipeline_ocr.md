@@ -1,10 +1,14 @@
-Kiến trúc hiện tại có hai phần độc lập: OCR tạo nội dung/bảng theo từng trang, sau đó bộ continuity quyết định bảng giữa hai trang có liên quan hay không.
+# Cơ chế OCR và table continuity
+
+Tài liệu giải thích cơ chế xử lý, không thay thế [contract AI1–AI2](../docs/contracts/AI1-AI2-CONTRACT.vi.md) hoặc [schema wire canonical](../docs/contracts/ai1.snapshot.v1.schema.json). Ví dụ model nội bộ dưới đây không phải payload wire đầy đủ hay bằng chứng E2E production.
+
+OCR tạo nội dung/bảng theo từng trang, sau đó bộ continuity quyết định bảng giữa hai trang có liên quan hay không.
 
 ```text
 Frontend upload PDF
         ↓
 Backend tạo OCR task
-        ↓ Kafka: ai1.ocr.command
+        ↓ Kafka: ci.ai1.ocr.commands
 AI1 worker
         ↓
 ProcessDocument
@@ -30,8 +34,8 @@ ProcessDocument
 
 Backend gửi OCR task qua Kafka. AI1 worker nhận task và chạy tại:
 
-- [`backend_ocr_job.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/infrastructure/backend_ocr_job.py:244>)
-- [`process_document.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/application/use_cases/process_document.py:17>)
+- [`backend_ocr_job.py`](../ai-service/src/contract_ocr/infrastructure/backend_ocr_job.py)
+- [`process_document.py`](../ai-service/src/contract_ocr/application/use_cases/process_document.py)
 
 `ProcessDocument` phân loại từng trang:
 
@@ -41,7 +45,7 @@ Backend gửi OCR task qua Kafka. AI1 worker nhận task và chạy tại:
 
 Với Mistral, logic nằm tại:
 
-- [`mistral_ocr.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/infrastructure/ocr/mistral_ocr.py:42>)
+- [`mistral_ocr.py`](../ai-service/src/contract_ocr/infrastructure/ocr/mistral_ocr.py)
 
 ## 2. Nội dung OCR và bbox được xử lý thế nào?
 
@@ -52,7 +56,7 @@ Mistral full-page markdown ───────→ source of truth cho text
 Mistral ordered blocks + bbox ───→ source of truth cho vị trí
 ```
 
-Cụ thể tại [`mistral_ocr.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/infrastructure/ocr/mistral_ocr.py:109>):
+Cụ thể tại [`mistral_ocr.py`](../ai-service/src/contract_ocr/infrastructure/ocr/mistral_ocr.py):
 
 1. Gửi toàn bộ ảnh trang đến `client.ocr.process()`.
 2. Yêu cầu:
@@ -81,7 +85,7 @@ bbox = vị trí toàn bảng
 
 Parser nằm tại:
 
-- [`markdown_tables.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/infrastructure/ocr/markdown_tables.py:1>)
+- [`markdown_tables.py`](../ai-service/src/contract_ocr/infrastructure/ocr/markdown_tables.py)
 
 Quy trình:
 
@@ -108,12 +112,12 @@ Các xử lý đáng chú ý:
 - Bbox toàn bảng là bbox thật của block Mistral: `MEASURED`.
 - Bbox cell hiện được chia đều từ bbox toàn bảng: `CLAIMED`, không được coi là tọa độ cell chính xác.
 
-Trong [`process_document.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/application/use_cases/process_document.py:137>), nếu Mistral đã trả `recognized.tables`, hệ thống sử dụng trực tiếp các bảng đó.
+Trong [`process_document.py`](../ai-service/src/contract_ocr/application/use_cases/process_document.py), nếu Mistral đã trả `recognized.tables`, hệ thống sử dụng trực tiếp các bảng đó.
 
 Chỉ khi OCR engine không trả bảng, hệ thống mới dùng fallback:
 
-- [`extract_scanned_tables.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/application/use_cases/extract_scanned_tables.py:1>)
-- [`table_grid.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/infrastructure/image/table_grid.py:1>)
+- [`extract_scanned_tables.py`](../ai-service/src/contract_ocr/application/use_cases/extract_scanned_tables.py)
+- [`table_grid.py`](../ai-service/src/contract_ocr/infrastructure/image/table_grid.py)
 
 Fallback này:
 
@@ -128,8 +132,8 @@ Nó chỉ hỗ trợ tốt bảng có đường viền; bảng borderless phụ 
 
 Logic chính nằm tại:
 
-- [`table_continuity.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/application/use_cases/table_continuity.py:57>)
-- Được gọi từ [`build_snapshot.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/application/use_cases/build_snapshot.py:165>)
+- [`table_continuity.py`](../ai-service/src/contract_ocr/application/use_cases/table_continuity.py)
+- Được gọi từ [`build_snapshot.py`](../ai-service/src/contract_ocr/application/use_cases/build_snapshot.py)
 
 Hệ thống chỉ so sánh:
 
@@ -193,7 +197,7 @@ Nó không biến hai bảng thành một mảng rows duy nhất. Hai bảng v�
 
 Có một implementation khác có khả năng ghép vật lý:
 
-- [`reconstruction/table_merger.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/reconstruction/table_merger.py:137>)
+- [`reconstruction/table_merger.py`](../ai-service/src/contract_ocr/reconstruction/table_merger.py)
 
 Implementation này có thể:
 
@@ -208,9 +212,9 @@ Nhưng pipeline này thuộc hệ `reconstruction`, hiện chưa được nối 
 
 `BuildSnapshot` tạo `ai1.snapshot.v1` tại:
 
-- [`build_snapshot.py`](</D:/AI Thuc Chien/Contract Intelligence/contract-intelligence-core/ai-service/src/contract_ocr/application/use_cases/build_snapshot.py:98>)
+- [`build_snapshot.py`](../ai-service/src/contract_ocr/application/use_cases/build_snapshot.py)
 
-Cấu trúc chính:
+Ví dụ rút gọn cho model nội bộ và metadata continuity; shape payload wire phải theo schema canonical được dẫn ở đầu tài liệu:
 
 ```json
 {

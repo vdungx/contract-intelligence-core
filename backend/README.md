@@ -140,7 +140,7 @@ uv run python -m contract_intelligence.worker
 
 Chi tiết:
 - AI1 OCR: `docs/DOC-05d-kafka-ai1-ocr-contract.md`
-- AI2 IDP (Kafka, full dossier): `docs/DOC-05e-kafka-ai2-idp-contract.md`
+- AI2 IDP (Kafka đã accepted, HTTP là runtime hiện tại): `docs/DOC-05e-kafka-ai2-idp-contract.md`
 
 ### HTTP job API (demo / manual only)
 
@@ -148,6 +148,12 @@ Backend giữ quyền điều phối và lưu trữ; `ai-service` chỉ nhận m
 thời hạn, xử lý OCR, rồi trả về job có thể polling. Swagger của backend vẫn là
 `http://127.0.0.1:8000/docs`; nhóm vận hành kiểm tra kết nối qua nhóm endpoint
 **AI-Service** (`GET /api/v1/readyz`, `GET/DELETE /api/v1/ai/jobs/{job_id}`).
+
+Luồng demo: backend gọi `POST /api/v1/jobs/ocr` → AI1 trả `202 job_id`; backend poll
+`GET /api/v1/jobs/{job_id}` tới `completed | failed | cancelled` rồi nhận
+`completed.result.snapshot` (`ai1.snapshot.v1`). AI1 chỉ sở hữu OCR; frontend chỉ gọi backend,
+không gọi AI1 trực tiếp trong luồng nghiệp vụ. Sau khi cấu hình, `GET /api/v1/readyz` phải báo
+`ai_service_ok: true`. Đây là đường demo/thủ công; runtime chính vẫn là Kafka (DOC-05d).
 
 Chạy AI1 ở terminal khác:
 
@@ -168,8 +174,8 @@ AI_SERVICE_TIMEOUT_SECONDS=30
 AI1 công bố contract riêng ở `http://127.0.0.1:8001/docs`: `POST /api/v1/jobs/ocr`,
 `GET/DELETE /api/v1/jobs/{job_id}` và `GET /healthz`. `source_blob_get_url` phải là
 URL tải PDF ngắn hạn và `source_sha256` phải khớp file. Nếu backend cấp
-`render_target.presigned_put_urls`, AI1 sẽ tải PNG render lên các URL đó; nếu không,
-snapshot đánh dấu rõ render chưa được lưu bền vững.
+`render_target.presigned_put_urls`, AI1 sẽ tải PNG render lên các URL đó; nếu không, snapshot
+đánh dấu `render_artifact_not_uploaded` cho từng trang.
 
 ---
 

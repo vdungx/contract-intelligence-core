@@ -29,7 +29,6 @@ Không dùng output AI1 cũ, result envelope cũ hoặc tài liệu legacy làm 
 | Artefact | Vai trò |
 |---|---|
 | [ai1.snapshot.v1.schema.json](ai1.snapshot.v1.schema.json) | JSON Schema canonical cho payload AI1 |
-| [registry.json](../../packages/contracts/schemas/registry.json) | Registry schema/version machine-readable |
 | Tài liệu này | Semantics, ownership và quy tắc AI2 tiêu thụ |
 
 Nếu tài liệu và schema khác nhau về shape, JSON Schema là nguồn quyết định shape. Nếu schema không thể hiện đầy đủ semantics, tài liệu này quyết định semantics của boundary.

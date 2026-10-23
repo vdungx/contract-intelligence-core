@@ -1,41 +1,38 @@
-"""Runnable end-to-end demo of the docs/architecture.md pipeline (see repo root
-DOC-04 v0.2, sections 5-9 and 27): a Contract PDF plus 0..N Appendix PDFs go
-through OCR (reusing the existing ai1.snapshot.v1 pipeline from
-export_snapshot_demo.py) and then a minimal structure -> classification ->
-fact -> citation -> conflict-detection layer, ending in a single
-self-contained HTML report. No API server or database is involved; the
-primary action is still "upload the contract" per section 27.11's Sprint-1
-slice — appendices are additive (0..N), not a forced second required upload.
+"""Standalone lightweight OCR/IDP demo: a Contract PDF plus 0..N Appendix PDFs
+go through OCR (reusing the existing ai1.snapshot.v1 pipeline from
+export_snapshot_demo.py) and then a small structure -> classification -> fact
+-> citation -> conflict layer, ending in one self-contained HTML report. This
+is NOT app.pipeline.idp/run_idp, NOT FourLayerReasoner, and NOT the Backend
+/jobs + PostgreSQL pipeline; the CLI path needs no API server or database. The
+primary action is still "upload the contract"; appendices are additive (0..N),
+not a forced second required upload. The same small layer is shared with the
+lightweight web demo (frontend/index.html + /api/ai2/analyze).
 
-Fields extracted match section 27.11's MVP list (parties, amount, date,
-payment term), plus a first-page-keyword document classification standing in
-for section 27.2's "Classification" output row, and a signals-based
-confidence object per fact/finding standing in for section 27.8. Deliberate
-simplifications versus the full architecture (not production shortcuts, just
-what a demo needs):
+The demo is deliberately smaller than the product pipeline:
 - Clause detection is a fixed "Dieu N." / "Khoan N." / "a)" regex 3-level
-  hierarchy, not the rules+layout classifier described in section 8.1.
-- Fact extraction is a handful of hand-picked regexes, not the typed
-  extraction pipeline in section 8.3.
-- Classification is first-page keyword sniffing, not the evidence-based
-  classifier in section 27.2.
-- Confidence is fixed signals (anchor precision) with no calibrated score, per
-  section 27.8's own caution against treating an uncalibrated number as a
-  probability.
-- Candidate generation for comparison groups facts by `field` name instead of
-  the keyword/embedding retrieval in section 9.2.
-- Citation objects are embedded inline in the fact/finding JSON rather than
-  resolved by id through a citation service (section 7.4) — there is no API or
-  database in this demo.
+  hierarchy, not a rules/layout classifier.
+- Fact extraction covers selected fields (parties, amount, date, payment term)
+  with hand-picked regexes, not the full typed extraction contract.
+- Classification is first-page keyword sniffing (contract/appendix/other), not
+  an evidence-based classifier.
+- Confidence is fixed signals (anchor precision, mismatch); score is null and
+  uncalibrated, so it must not be read as a probability.
+- Dates stay raw strings: dd/mm/yyyy vs mm/dd/yyyy is ambiguous without a
+  locale, and the demo does not guess one.
+- Comparison groups facts by field name and runs contract-vs-one-annex; it
+  never compares annex-vs-annex implicitly.
+- Citations are embedded inline in the fact/finding JSON rather than resolved
+  by a citation service.
 - No table extraction (BuildSnapshot's tables[] is always empty — a disclosed
-  gap in the underlying OCR snapshot pipeline itself, not something added
-  here). Human review is an in-browser "Sua" action per fact (edits the
-  rendered page only; nothing is saved anywhere) and there is no real
-  evaluation report (no ground truth dataset is wired in) — both are called
-  out again where they show up in the report.
+  gap in the underlying OCR snapshot pipeline itself, not added here).
+- Browser "Sua" edits only the rendered page for the session; nothing is saved
+  and there is no durable audit trail. Evaluation is not real accuracy/F1 (no
+  ground truth dataset is wired in).
 
 Output is clearly SYNTHETIC data (see scripts/create_synthetic_demo.py for the
 same convention): never a real contract, never benchmark evidence.
+
+Documented limitations also live in docs/ai2/AI2-07-full-pipeline.vi.md §F.
 
 Run with no arguments for the built-in synthetic dossier, or point it at your
 own PDF to try the same classification/fact/citation layer on real content:
@@ -92,10 +89,10 @@ OUTPUT_ROOT = Path("data/generated/demo_ai2_pipeline").resolve()
 DOSSIER_ID = "demo-dossier-ai2"
 PAGE_WIDTH, PAGE_HEIGHT = 595, 842  # A4 points
 
-# Covers the MVP field set architecture.md section 27.11 asks for (parties,
-# amount, date, payment term), plus one deliberate mismatch (payment term)
-# so the demo still shows both `comparable_match` and `comparable_difference`
-# from section 9.3. Party/date lines sit in the preamble, before "Dieu 1" —
+# Covers the selected demo fields (parties, amount, date, payment term),
+# plus one deliberate mismatch (payment term) so the demo still shows both
+# `comparable_match` and `comparable_difference`. Party/date lines sit in the
+# preamble, before "Dieu 1" —
 # see extract_clauses()'s "Mo dau" pseudo-clause, which exists specifically so
 # these lines aren't silently dropped. ASCII-only text (no Vietnamese
 # diacritics) because pymupdf's base14 fonts can't render them, same
@@ -233,8 +230,8 @@ def build_dossier_snapshots() -> dict[str, SnapshotAndDir | list[SnapshotAndDir]
     """Runs the existing OCR pipeline and returns {"contract": (snapshot, image_dir),
     "annexes": [(snapshot, image_dir), ...]}. Contract stays native (TEXT_LAYER,
     real word geometry); the one built-in annex is routed through the OCR stub
-    (SCANNED_OCR, line geometry only) — same "native + scan" mix architecture.md
-    asks the mentor demo to cover."""
+    (SCANNED_OCR, line geometry only) — same "native + scan" mix this demo
+    is meant to cover."""
     source_dir = OUTPUT_ROOT / "_source_pdfs"
     source_dir.mkdir(parents=True, exist_ok=True)
 

@@ -11,12 +11,15 @@ contract-intelligence-core/
 ├── backend/        # API + worker điều phối pipeline (Python, FastAPI, SQLAlchemy async)
 ├── frontend/       # Web UI cho reviewer / operator / admin (Vite + React + TypeScript)
 ├── ai-service/     # AI1 OCR worker (src/contract_ocr) + AI2 IDP service (app/)
-├── ai1/            # Tài liệu bàn giao và contract của AI1
-├── evals/          # Bộ đánh giá AI2 (golden set, card, corpus)
+├── ai1/            # Bàn giao AI1: schema snapshot, ví dụ, script kiểm tra
+├── evals/          # Bộ đánh giá AI2 (golden set, card, corpus, gate)
 ├── keycloak/       # Image Keycloak + realm cấu hình sẵn
 ├── infra/          # Cấu hình Prometheus, Grafana
 ├── deploy/         # Compose production, Caddy, script deploy
 ├── docs/           # Tài liệu sản phẩm & kỹ thuật, contract giữa các service
+├── output/         # Artifact sinh ra khi chạy local (không phải source)
+├── plans/          # Plan thực thi theo ngày
+├── scripts/        # Script kiểm tra E2E, release và topology
 └── docker-compose.yml
 ```
 
@@ -48,8 +51,8 @@ contract-intelligence-core/
 
 ## 🌿 Quy ước làm việc trên repo
 
-Quy tắc đầy đủ (tiếng Anh) ở [CONTRIBUTING.md](CONTRIBUTING.md); hướng dẫn thao tác cụ thể (tiếng Việt)
-ở [GITFLOWS.md](GITFLOWS.md). GitHub ruleset và check `pr-guard` cưỡng chế các điểm chính:
+Quy tắc đầy đủ và các lệnh Git hằng ngày ở [CONTRIBUTING.md](CONTRIBUTING.md). GitHub ruleset và
+check `pr-guard` cưỡng chế các điểm chính:
 
 ```
 feature branch  ──PR──▶  develop  ──release PR──▶  main
@@ -95,23 +98,16 @@ cd backend
 uv run ruff check src tests && uv run mypy src && uv run lint-imports && uv run pytest tests/unit tests/architecture
 ```
 
-Chi tiết từng phần: [`backend/README.md`](backend/README.md), [`ai-service/README.md`](ai-service/README.md), [`HUONG-DAN-CHAY.md`](HUONG-DAN-CHAY.md), [`deploy/README.md`](deploy/README.md).
+Chi tiết từng phần: [`backend/README.md`](backend/README.md), [`frontend/README.md`](frontend/README.md), [`ai-service/README.md`](ai-service/README.md), [`deploy/README.md`](deploy/README.md). Hướng dẫn chạy local đầy đủ: [`docs/AI2-LOCAL-SETUP.md`](docs/AI2-LOCAL-SETUP.md).
 
 ---
 
 ## 📚 Tài liệu
 
-Xem thư mục [`docs/`](./docs/), các tài liệu chính:
-
-- `DOC-01-product-vision.md` — Tầm nhìn sản phẩm, vấn đề, đối tượng người dùng
-- `DOC-04-architecture.md`, `DOC-04d-backend-architecture.md` — Kiến trúc hệ thống và backend, ADRs
-- `DOC-04b-postgres-schema.sql`, `DOC-04c-database-erd.md` — Schema và ERD database
-- `DOC-05-api-spec.yaml` — OpenAPI 3.0 spec cho REST API
-- `DOC-05b-frontend-backend-api-contract.md` — Contract API giữa frontend và backend
-- `DOC-05c` → `DOC-05e`, `contracts/` — Contract giữa backend và AI1/AI2 (HTTP, Kafka, JSON Schema)
-- `DOC-07-khung-project.md` — Khung dự án: luồng end-to-end, ranh giới subsystem, I/O ghép nối
-- `DOC-12-ke-hoach-deploy-backend.md` — Kế hoạch deploy
-- `MONITORING.md` — Giám sát hệ thống
+[`docs/README.md`](docs/README.md) là index canonical: phạm vi sản phẩm, kiến trúc mục tiêu và hiện
+trạng, contract FE-BE / BE-AI1 / BE-AI2, vận hành và lịch sử. README theo khu vực:
+[`backend/`](backend/README.md) · [`frontend/`](frontend/README.md) · [`ai-service/`](ai-service/README.md) ·
+[`deploy/`](deploy/README.md).
 
 ---
 
@@ -121,8 +117,12 @@ Xem thư mục [`docs/`](./docs/), các tài liệu chính:
 |---|---|
 | `backend/` | Backend Engineer |
 | `frontend/` | Frontend Engineer |
-| `ai-service/` | AI Engineer |
+| `ai-service/` | AI Engineer (AI1 + AI2) |
 | `docs/` | Toàn team review & cập nhật |
+
+Ranh giới: FE chỉ gọi REST/OpenAPI, không import Python; BE không gọi module nội bộ của AI service;
+AI1 (`ai-service/src/contract_ocr`) không ghi DB; AI2 (`ai-service/app`) không approve/publish, chỉ
+trả proposal. Mọi giao tiếp giữa các phần đi qua contract đã version trong [`docs/contracts/`](docs/contracts/).
 
 ---
 

@@ -10,8 +10,10 @@ AI2 trước đây chỉ có `AMENDS` thô (`app/reasoning/relations.py`) và t�
 
 | Biến môi trường | Mặc định | Tác dụng |
 |---|---|---|
-| `AI2_CONTRACT_GRAPH_ENABLED` | tắt | Bật builder + projection + ghi bảng. Truthy: `1`, `true`, `yes`, `on` (không phân biệt hoa thường, bỏ khoảng trắng). |
+| `AI2_CONTRACT_GRAPH_ENABLED` | bật trong source và full Compose profile; operator có thể override `false` | Bật builder + projection + ghi bảng. Truthy: `1`, `true`, `yes`, `on` (không phân biệt hoa thường, bỏ khoảng trắng). |
 | `AI2_CONTRACT_GRAPH_AUTO_PASS` | tắt | Cho phép cạnh lên `PASS` **nếu** calibration đạt cổng (mục 7). Hiện cổng đóng nên vô hiệu. |
+
+Mặc định bật chỉ là cấu hình capability, không phải bằng chứng graph/inference/DB row đã chạy trong môi trường nào; deployment thật phải kiểm tra env và consent riêng.
 
 Flag tắt: không import package `app.pipeline.contract_graph`, không key coverage mới, không finding mới, không câu SQL mới. Bảo đảm bằng golden `ai-service/fixtures/contract_graph/idp_flag_off_golden.json` (`tests/test_contract_graph_flag_off_regression.py`, so nội dung JSON từng case dưới `PYTHONHASHSEED` cố định).
 

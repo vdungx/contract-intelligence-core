@@ -20,6 +20,47 @@ Branch naming (enforced on push):
 Examples: `feature/backend-upload-api`, `feat/ai-clause-extractor`, `fix/bbox-offset-page-2`,
 `docs/prd-conflicts`, `hotfix/batch-job-crash`, `release/v0.1.0`. Use lowercase, hyphens, no spaces, no Vietnamese diacritics.
 
+## Day-to-day workflow
+
+Start from an up-to-date `develop`:
+
+```bash
+git switch develop
+git pull --ff-only origin develop
+git switch -c feature/short-description
+```
+
+Commit in small, reviewable steps:
+
+```bash
+git status --short
+git diff
+git add path/to/file
+git commit -m "feat(scope): concise description"
+```
+
+Keep each commit to one purpose; do not mix formatting, refactoring and behavior changes. Before
+opening the PR, rebase on the integration branch:
+
+```bash
+git fetch origin
+git rebase origin/develop
+git push --set-upstream origin feature/short-description
+```
+
+## Production hotfix
+
+Create the hotfix from `main`:
+
+```bash
+git switch main
+git pull --ff-only origin main
+git switch -c hotfix/short-description
+```
+
+Open the hotfix PR against `main`. After it is merged and the release is verified, open a second PR
+that brings the same change back to `develop`; skipping it makes the bug return in the next release.
+
 ## Pull requests
 
 - Target `develop`. Only release PRs (`develop → main`, `release/* → main`) and `hotfix/*` PRs target `main`.
@@ -68,3 +109,11 @@ Examples: `feature/backend-upload-api`, `feat/ai-clause-extractor`, `fix/bbox-of
 - Link the issue from the PR (`Closes #12`).
 - The sprint tracker (Excel on OneDrive) stays the source of truth for planning; GitHub issues
   carry the technical detail.
+
+## Before you push
+
+- [ ] `git diff --check` reports no whitespace errors.
+- [ ] Only files in the task are staged; no contracts, scans or secrets.
+- [ ] Tests and lint for the changed subsystem (`backend`/`frontend`/`ai-service`) passed.
+- [ ] Branch name and PR title match the conventions above.
+- [ ] README/docs/API spec updated if a contract changed.

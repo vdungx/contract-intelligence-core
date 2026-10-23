@@ -1,9 +1,7 @@
 # Documentation governance
 
-Thư mục này chứa các quy ước tổ chức tài liệu và ownership của monorepo.
+Thư mục này chứa quy ước tổ chức tài liệu. Cấu trúc monorepo và ranh giới team nằm ở
+[README gốc](../../README.md); quy tắc làm việc nằm ở [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 - [Document governance](DOCUMENT-GOVERNANCE.md)
-- [Project structure](PROJECT-STRUCTURE.vi.md)
-- [Team ownership](TEAM-OWNERSHIP.vi.md)
-
-Decision register, standards matrix, traceability matrix và review report cũ không được khôi phục trong đợt tái cấu trúc này. Nội dung đó sẽ được chuẩn hóa ở một change set riêng.
+- [Decision register](../decisions.md)

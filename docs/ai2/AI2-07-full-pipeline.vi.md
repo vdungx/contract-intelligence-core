@@ -1,11 +1,12 @@
 # AI2-07 — Luồng đầy đủ (đầu vào / xử lý / đầu ra)
 
-**Phiên bản:** v1.1  
-**Ngày:** 20/09/2026  
+**Phiên bản:** v1.2
+
+**Ngày:** 23/10/2026
 **Đối chiếu mã:** `ai-service` đang chạy (FastAPI `app.api.main`, `run_idp`, `FourLayerReasoner`).  
 **Không mô tả:** mô hình CPS / đơn vị vô trạng thái, OCR đám mây, kho vector, quyền trên backend. Các hạng mục đó nằm cột giả hoặc ngoài phạm vi trong [AI2-06](AI2-06-implementation-gap.vi.md).
 
-Đọc kèm: [AI2-06](AI2-06-implementation-gap.vi.md) · kiến trúc C0–C4 [AI2-08](AI2-08-architecture-c0-c4.vi.md) · đích đội bốn người [DOC-04](../DOC-04-architecture.md) (không khẳng định đã chạy).
+Đọc kèm: [AI2-06](AI2-06-implementation-gap.vi.md) · kiến trúc workspace/demo [AI2-DOC-04](AI2-DOC-04-architecture.vi.md) · đích đội bốn người [DOC-04](../DOC-04-architecture.md) (không khẳng định đã chạy).
 
 ## Mục tiêu wave hiện tại [2026-09-23]
 
@@ -58,6 +59,23 @@ flowchart TB
   UI --> Ask --> L0 --> L1 --> L2 --> L3
 ```
 
+## Lane đầu vào và dữ liệu song song
+
+```text
+JSON snapshot -> DossierRecord -> pipeline/reasoning
+file bytes    -> session blob  -> chỉ viewer
+```
+
+Ba lane không được fallback hoặc tự chuyển đổi cho nhau:
+
+| Lane | Route | Payload |
+|---|---|---|
+| Snapshot/legacy workspace | `/api/workspace/ai1-snapshot` | `ai1.snapshot.v1`; legacy chỉ qua compatibility path riêng |
+| Result v0.1 compatibility | `/api/workspace/ai1-result` | `ai1.result.v0.1` (`machine/effective`); từ chối snapshot v1 |
+| Backend processing | `/jobs/idp` | `be.ai2.processing.request.v1` chứa `ai1.snapshot.v1`; không thay shape snapshot |
+
+Contract canonical và semantics handoff nằm ở [AI1–AI2 contract](../contracts/AI1-AI2-CONTRACT.vi.md); architecture view ở [AI2-DOC-04 §3.2](AI2-DOC-04-architecture.vi.md#32-handoff-canonical-ai1--ai2). `pdf_bytes` chỉ đi vào blob cho viewer, không đi vào `DossierRecord`, handoff, retrieval hoặc prompt.
+
 ---
 
 ## A. Luồng demo và trích xuất
@@ -82,6 +100,8 @@ flowchart TB
 
 **Cấm:** không gửi đủ `pdf_bytes` vào bộ kiểm tra bàn giao hay LLM.
 
+**Failure:** snapshot sai contract → HTTP 422; catalog test gửi vào handoff bị reject trước reasoning; file rỗng/quá giới hạn → HTTP 400.
+
 ### A2. Kiểm tra bàn giao
 
 **Đầu vào:** mã khách, mã hồ sơ, ghim phiên bản, danh sách trang, nút, bảng, hồ sơ tenant, vòng đời; tùy chọn `pdf_bytes`.
@@ -89,6 +109,8 @@ flowchart TB
 **Xử lý:** `HandoffValidator.validate`.
 
 **Đầu ra:** `ValidatedHandoff` gồm cờ chặn và danh sách sự cố.
+
+Payload được giữ nguyên qua boundary. `PARTIAL`, `UNKNOWN`, `UNAVAILABLE` và `FAILED` giữ nguyên semantics: evidence thiếu khác evidence phủ định, không nâng thành complete; không đưa re-OCR vào contract hiện tại.
 
 | Điều kiện | Trạng thái |
 |---|---|
@@ -106,6 +128,8 @@ flowchart TB
 **Xử lý:** `ObjectRouter.scout` rồi `route_node`.
 
 **Đầu ra:** dàn bài các nút (`node_id`, `type`, `raw_label`, …). Đường: trường (`FIELD`), bảng (`TABLE`), điều (`CLAUSE` gồm mục và khối không số).
+
+`build_relation_graph` chạy trên structural node, parent/ancestor, source role, label, explicit reference và snapshot digest. Edge heuristic chỉ mở rộng candidate, không làm evidence cuối; reference mơ hồ hoặc target không có trong snapshot tạo issue, không tự tạo node cho phụ lục thiếu.
 
 **Cấm:** đổ nguyên PDF vào tác nhân.
 
@@ -234,7 +258,58 @@ văn; trả safe state và nêu phần evidence còn thiếu.
 
 ---
 
-## C. Kiểm tra thực tế và giới hạn claim
+## C. Tài liệu dài, nhiều phụ lục và không có bảng
+
+### C1. Tài liệu 50 trang
+
+```text
+snapshot pages/nodes
+→ bounded processing units
+→ facts/chunks/citations
+→ retrieval top-k
+→ context trim
+→ optional L2
+→ L3 grounding
+```
+
+Không đưa toàn bộ dossier vào một prompt. Unit, segment, top-k, L2 step và prompt đều có giới hạn. Nếu không tìm đủ nguồn, trả `INSUFFICIENT_EVIDENCE` thay vì tóm tắt dựa trên phần nhớ được.
+
+### C2. Quan hệ hợp đồng và nhiều phụ lục
+
+Với câu hỏi về một điều và nhiều phụ lục:
+
+1. Classify thành relation/compare.
+2. Exact retrieve điều được hỏi.
+3. Relation graph mở rộng `SAME_CLAUSE`, `REFERENCES` hoặc ancestor.
+4. L1 giữ citation từ body và từng annex.
+5. Vector chỉ bổ sung candidate nếu cần.
+6. L2 có thể tổng hợp các evidence bounded.
+7. L3 kiểm tra citation từng nguồn.
+
+Nếu phụ lục được dẫn chiếu nhưng không có trong snapshot, output là `INSUFFICIENT_EVIDENCE`; không suy ra nội dung phụ lục.
+
+### C3. Không có bảng
+
+| Input condition | Behavior |
+|---|---|
+| Body và annex đều `NOT_PRESENT` | Dossier hợp lệ, không tạo lỗi thiếu bảng |
+| `UNKNOWN`/`UNAVAILABLE` | Có thể xử lý text degraded, tạo issue phù hợp |
+| `DETECTED` nhưng thiếu cells | Không dựng bảng, tạo structure issue |
+| Hỏi số liệu “trong bảng” khi không có bảng evidence | `INSUFFICIENT_EVIDENCE` |
+| Số xuất hiện trong clause text | Không được tự gán thành table value |
+
+### C4. Trạng thái cuối
+
+| State | Ý nghĩa |
+|---|---|
+| `PASS` | Extraction/evidence sạch ở mức hiện tại |
+| `ANSWERED` | Answer grounded, citation hợp lệ |
+| `NEEDS_REVIEW` | Conflict, OCR thấp, relation heuristic hoặc draft chưa đủ chắc |
+| `INSUFFICIENT_EVIDENCE` | Không đủ nguồn để trả lời an toàn |
+| `NOT_COMPARABLE` | Khác scope/unit/condition |
+| `BLOCKED` | Handoff, tool, lifecycle, lease hoặc external policy chặn |
+
+## D. Kiểm tra thực tế và giới hạn claim
 
 - Đã có regression/gold cho `HD-TONG-HOP`, `SALE-BRD-07`, `SERVICE-BRD-08`, missing cell/zero, currency/scope, query rộng, injection và ACL/lifecycle.
 - Đã có fixture cho EC-001..EC-056, nhưng nhóm bảng nhiều trang, OCR/scan, ngày tương đối, bilingual, queue/version và cost vẫn là partial/mock hoặc ngoài AI2.
@@ -242,6 +317,30 @@ văn; trả safe state và nêu phần evidence còn thiếu.
 - `extract_page_texts`/PDF encryption là trách nhiệm intake AI1; AI2 chỉ bảo đảm chặn khi nhận snapshot `ENCRYPTED` hoặc bị truyền `pdf_bytes`.
 - Không dùng nhãn `REVIEW` hoặc `COMPARABLE_DIFF` thay cho enum thật; phải dùng enum trong `app/contracts/models.py`.
 
-## D. Việc không nằm trong “đã xong”
+## E. Việc không nằm trong “đã xong”
+
+- Không có OCR thật trong AI2 khi input chỉ là legacy/text degraded.
+- Không tái tạo geometry/table cells bị thiếu.
+- Không có active index publish thật.
+- Demo synchronous; bounded units chưa phải worker distributed.
+- Live LLM/embedding phụ thuộc NineRouter, model discovery, egress và budget; LLM/vector không thay thế evidence của AI1.
 
 OCR Paddle/Tesseract, quyền và hàng rào backend, worker Postgres, vector, sổ chi phí, nhận file mã hóa — xem AI2-06. Không nhét vào cột đã xong của luồng này.
+
+## F. Demo OCR/IDP tối giản riêng
+
+`scripts/demo_ai2_pipeline.py`, `frontend/index.html` và `scripts/demo_report_template.html` là **demo OCR/IDP tối giản standalone**, không phải `app.pipeline.idp`/`run_idp`, không dùng `FourLayerReasoner`, không đi qua Backend `/jobs` hay PostgreSQL. Demo tái dùng `ai1.snapshot.v1` từ `export_snapshot_demo.py`, rồi chạy một lớp regex/classification/compare nhỏ và kết thúc bằng HTML tĩnh.
+
+Giới hạn đã công bố:
+
+- Heading nhận bằng regex cố định `Dieu N.` / `Khoan N.` / `a)`; field chỉ gồm parties, amount, date, payment term.
+- Phân loại document bằng keyword trang đầu (`contract`/`appendix`/`other`), không phải classifier dựa trên evidence.
+- Confidence chỉ là tín hiệu anchor/mismatch; `score` null, không calibrated, không phải xác suất.
+- Ngày giữ raw string vì `dd/mm/yyyy` và `mm/dd/yyyy` mơ hồ khi thiếu locale; demo không đoán.
+- Citation nhúng inline trong fact/finding; không có citation service.
+- So sánh theo từng cặp contract-vs-một-annex; không ngầm so annex-vs-annex.
+- Không trích bảng: `BuildSnapshot` để `tables[]` rỗng.
+- "Sửa" trên browser chỉ đổi DOM trong phiên; không lưu, không có audit bền vững.
+- Không có ground truth/accuracy; output là dữ liệu tổng hợp hoặc kết quả demo, không phải benchmark.
+
+Cách chạy và ba bề mặt demo ở [`ai-service/README.md` §10](../../ai-service/README.md#10-demo-ocridp-tối-giản-standalone-phân-loại-cấu-trúc-fact-citation-xung-đột-confidence).

@@ -7,6 +7,7 @@
 - [Webhook Delivery — Phase Two keycloak-events](#webhook-delivery--phase-two-keycloak-events)
 - [Cấu hình Webhook qua Admin Console](#cấu-hình-webhook-qua-admin-console)
 - [Payload Format & Tích hợp với Backend](#payload-format--tích-hợp-với-backend)
+- [Quản lý người dùng qua backend (Keycloak Admin API)](#quản-lý-người-dùng-qua-backend-keycloak-admin-api)
 - [Kiểm thử cục bộ (Local Testing)](#kiểm-thử-cục-bộ-local-testing)
 - [Backend .env — Biến môi trường](#backend-env--biến-môi-trường)
 - [Troubleshooting](#troubleshooting)
@@ -341,9 +342,11 @@ Service account của client `contract-intel-backend` cần realm-management cli
 
 | Role | Cần cho |
 |---|---|
-| `view-users` | `GET /admin/realms/{realm}/users/{id}` |
-| `view-events` | (optional) `GET /admin/realms/{realm}/events` |
-| `manage-events` | (optional) webhook resend feature |
+| `manage-users` | Tạo, sửa, khoá user và gán realm role (quản lý người dùng) |
+| `query-users` | Tìm danh sách user |
+| `view-users` | `GET /admin/realms/{realm}/users/{id}` khi webhook sync |
+| `view-realm`, `view-clients` | Đọc realm/role representation |
+| `view-events`, `manage-events` | Optional — xem event / webhook resend |
 
 Đã pre-configured trong `realm-export.json` qua user entry:
 
@@ -354,14 +357,103 @@ Service account của client `contract-intel-backend` cần realm-management cli
   "enabled": true,
   "serviceAccountClientId": "contract-intel-backend",
   "clientRoles": {
-    "realm-management": ["view-users", "view-realm", "view-clients", "view-events", "manage-events"]
+    "realm-management": [
+      "view-users", "query-users", "manage-users",
+      "view-realm", "view-clients", "view-events", "manage-events"
+    ]
   }
 }
 ```
 
-Keycloak tự động link user này với client `contract-intel-backend` thông qua `serviceAccountClientId`. Khi service account authenticate, nó nhận các roles này trong access token.
+Keycloak tự động link user này với client `contract-intel-backend` thông qua `serviceAccountClientId`.
+Khi service account authenticate, nó nhận các roles này trong access token.
 
 ---
+
+## Quản lý người dùng qua backend (Keycloak Admin API)
+
+Browser **không** gọi Keycloak Admin API và không giữ client secret. Frontend gọi backend
+`/api/v1/users...`; backend dùng service account `contract-intel-backend` (client credentials) gọi
+`/admin/realms/contract-intelligence/...`. Tra cứu endpoint/shape cho frontend: mục 18 của
+[`frontend/API-BE.md`](../frontend/API-BE.md).
+
+### Tạo user và gửi lời mời
+
+`POST /admin/realms/contract-intelligence/users`:
+
+```json
+{
+  "username": "ten@congty.com",
+  "email": "ten@congty.com",
+  "firstName": "Nguyễn Văn A",
+  "enabled": true,
+  "emailVerified": true,
+  "requiredActions": ["UPDATE_PASSWORD"],
+  "attributes": {
+    "tenant_id": ["tenant_vgr_01"],
+    "invite_sent_at": ["<epoch-ms>"]
+  }
+}
+```
+
+- Không gửi `credentials`; user đặt mật khẩu qua email mời.
+- `emailVerified: true` vì realm đang `verifyEmail: false`.
+- `tenant_id` là attribute admin-only, dùng cho directory/lookup cùng tenant. Mapper JWT hiện vẫn
+  hardcode `tenant_vgr_01`, nhưng vẫn phải ghi attribute để không gãy khi mapper chuyển sang đọc user.
+- Đọc header `Location` để lấy user id.
+- `status` suy từ Keycloak, không lưu tay: `enabled: false` → `disabled`; còn `UPDATE_PASSWORD`
+  trong `requiredActions` → `invited`; ngược lại → `active`.
+
+Gán realm role: `GET /admin/realms/contract-intelligence/roles/{OPERATOR|REVIEWER|ADMINISTRATOR}`
+rồi `POST /admin/realms/contract-intelligence/users/{id}/role-mappings/realm` với
+`[{"id": "<role-uuid>", "name": "OPERATOR"}]`. Đổi role: `DELETE` role cũ rồi `POST` role mới.
+JWT frontend đọc realm role (`realm_access.roles`), nên client `contract-intel-frontend` phải có scope
+`roles`.
+
+### Email đặt mật khẩu
+
+`PUT /admin/realms/contract-intelligence/users/{id}/execute-actions-email?client_id=contract-intel-frontend&lifespan=43200&redirect_uri=http://localhost:5173/`
+
+Body: `["UPDATE_PASSWORD"]`.
+
+- `lifespan` tính bằng giây; backend mặc định 12 giờ (`KEYCLOAK_INVITE_LIFESPAN_SECONDS`), trùng
+  `actionTokenGeneratedByAdminLifespan` trong realm.
+- `redirect_uri` phải nằm trong Valid Redirect URIs. `http://localhost:5173/` đã có trong
+  `realm-export.json`; `/auth/callback` chỉ nhận authorization code, không dùng cho link này.
+- Backend gọi Admin API bằng `KEYCLOAK_ADMIN_CLIENT_ID` / `KEYCLOAK_ADMIN_CLIENT_SECRET`; client,
+  lifespan và redirect của thư mời đổi bằng `KEYCLOAK_INVITE_*` trong `backend/.env`.
+- SMTP lỗi: backend trả `503 email_not_configured`; user vẫn được tạo và admin gửi lại qua
+  `POST /api/v1/users/{id}/invite`.
+
+### SMTP
+
+Realm local dùng Mailpit (`mailpit:1025`, `noreply@ci.local`, không auth/TLS) nên thư không ra ngoài.
+Staging/production phải đặt SMTP thật trên realm (host, port, from, auth, starttls/ssl) hoặc chạy
+`deploy/keycloak_configure.py` với `SMTP_*`; script giữ Mailpit khi `SMTP_HOST` trống hoặc `mailpit`.
+
+### Thư mời bị trả về (IMAP)
+
+Gmail nhận thư mời kể cả khi địa chỉ không tồn tại, rồi gửi "Address not found" về hộp thư gửi.
+Backend đọc INBOX (chỉ đọc) và trả `invite_delivery` (`pending`, `sent`, `bounced`, `null`) cùng
+`invite_delivery_reason`.
+
+- Gmail: `SMTP_HOST=smtp.gmail.com`, `SMTP_USER`, `SMTP_PASSWORD` (app password) → backend tự dùng
+  `imap.gmail.com:993` cùng tài khoản.
+- Hộp thư khác: `INVITE_BOUNCE_IMAP_HOST`, `INVITE_BOUNCE_IMAP_USER`,
+  `INVITE_BOUNCE_IMAP_PASSWORD` (port mặc định 993); `INVITE_BOUNCE_CHECK_ENABLED=false` để tắt.
+- Mailpit không có thư trả về; không cấu hình IMAP thì `invite_delivery = null`.
+- Realm phải khai báo attribute admin-only `invite_sent_at`, `invite_bounced_at`,
+  `invite_bounce_reason` (đã có trong `realm-export.json`; realm cũ dùng
+  `deploy/keycloak_configure.py`).
+
+### Điều kiện vận hành
+
+- `contract-intel-backend` bật service account và secret khớp `KEYCLOAK_ADMIN_CLIENT_SECRET`.
+- Service account có `manage-users` + `query-users` (và `view-users` cho webhook); thiếu quyền →
+  backend trả `502 keycloak_forbidden`.
+- Realm SMTP gửi được thư; thiếu → `503 email_not_configured`.
+- User có attribute `tenant_id`; thiếu thì không xuất hiện trong directory/lookup của tenant
+  (JWT vẫn có tenant nhờ mapper hardcode).
 
 ## Kiểm thử cục bộ (Local Testing)
 

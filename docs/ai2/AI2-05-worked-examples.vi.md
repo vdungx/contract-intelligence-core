@@ -4,7 +4,7 @@
 
 **Phiên bản:** v0.1 (Draft)  
 **Dữ liệu:** hợp đồng giả (Công ty ABC / XYZ, MST, Điều 5.3, Phụ lục 1). Không dùng hợp đồng thật.  
-**Kiến trúc:** [AI2-05-architecture](AI2-05-architecture.vi.md)  
+**Kiến trúc:** [AI2-DOC-04](AI2-DOC-04-architecture.vi.md)
 **Matrix:** [AI2-04](AI2-04-edge-case-test-matrix.vi.md)
 
 Pins chung trừ khi case nói khác:

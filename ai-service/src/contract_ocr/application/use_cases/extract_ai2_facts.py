@@ -1,14 +1,14 @@
-"""Minimal "AI2" layer on top of an ai1.snapshot.v1 DocumentSnapshot: document
-classification, clause structure (Dieu -> Khoan -> Diem), typed facts with
-citations and a confidence signal, and a contract-vs-N-appendix comparison.
-Shared by scripts/demo_ai2_pipeline.py (CLI) and contract_ocr.web.app (the
-`/api/ai2/analyze` backend endpoint) so both surfaces run the exact same
-extraction logic instead of drifting apart.
+"""Lightweight demo layer used by scripts/demo_ai2_pipeline.py (CLI) and the
+web demo `/api/ai2/analyze`: document classification, fixed-regex clause
+structure (Dieu -> Khoan -> Diem), selected typed facts with inline citations
+and a confidence signal, and a contract-vs-N-appendix comparison. It is NOT
+`app.pipeline.idp`/`run_idp` and NOT `FourLayerReasoner`; it does not implement
+the full AI2 product pipeline. The same small layer is shared by the CLI and
+the web demo so they do not drift apart.
 
-See scripts/demo_ai2_pipeline.py's module docstring for how this maps to (and
-deliberately simplifies) docs/architecture.md sections 5-9 and 27 — that
-docstring is the canonical explanation of the design tradeoffs; this module is
-just where the code moved to so a second caller (the web API) could reuse it.
+See scripts/demo_ai2_pipeline.py's module docstring for the standalone demo's
+scope and disclosed limitations; documented limits also live in
+docs/ai2/AI2-07-full-pipeline.vi.md §F.
 """
 
 import re
@@ -32,8 +32,8 @@ def fold_diacritics(text: str) -> str:
     return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
 
 
-# Three heading levels, matching architecture.md section 8.1's node types
-# (article/clause/point). ARTICLE_RE only fires on a literal "Dieu N."/"Muc N.";
+# Three fixed demo heading levels (article/clause/point), matched by the regexes
+# below; not a production structure classifier. ARTICLE_RE only fires on a literal "Dieu N."/"Muc N.";
 # CLAUSE_RE/POINT_RE only get a chance once we're already inside an article
 # (see extract_clauses), otherwise an ordinary sentence that happens to start
 # with "1. " or "a) " in the preamble would be misread as a heading — a real
@@ -42,8 +42,8 @@ ARTICLE_RE = re.compile(r"^(Dieu|Muc)\s+(\d+)\.?\s*(.*)$")
 CLAUSE_RE = re.compile(r"^(?:Khoan\s+)?(\d+)\.\s*(.*)$")
 POINT_RE = re.compile(r"^([a-zA-Z])\)\s*(.*)$")
 
-# Field set matches architecture.md section 27.11's Sprint-1 MVP list ("parties,
-# amount, date, payment term"). Party names use a dedicated regex (PARTY_RE)
+# Selected demo fields (parties, amount, date, payment term); not the full
+# extraction contract. Party names use a dedicated regex (PARTY_RE)
 # instead of this list because the field name ("party_a" vs "party_b") comes
 # from a captured group, not a fixed string like the others.
 FACT_PATTERNS = [
@@ -65,10 +65,7 @@ FACT_PATTERNS = [
 ]
 PARTY_RE = re.compile(r"^Ben\s+([AB])\s*[:\-]\s*(.+)$")
 
-# Very small stand-in for architecture.md section 27.2's "Classification"
-# output (contract/appendix/other + confirmed/needs_review): first-page
-# keyword sniffing, nowhere near the real evidence-based classifier in the
-# full design, but enough to show the output shape in this demo.
+# Very small demo classifier: first-page keyword sniffing, not evidence-based.
 CLASSIFICATION_KEYWORDS = [("PHU LUC", "appendix"), ("HOP DONG", "contract")]
 
 
@@ -83,7 +80,7 @@ def classify_document(snapshot: DocumentSnapshot) -> dict:
 def extract_clauses(snapshot: DocumentSnapshot) -> list[dict]:
     """Builds a 4-level structure: preamble (before any "Dieu N."/"Muc N.",
     where parties/signing date usually live — an earlier version dropped
-    these lines entirely, silently losing the fields section 27.11 asks for)
+    these lines entirely, silently losing the selected demo fields)
     -> article -> clause -> point, each clause dict carrying `parent_clause_id`
     so callers can reconstruct the tree. Every line ends up in exactly one of
     these; nothing is dropped."""
@@ -230,10 +227,9 @@ def _citation(
 
 
 def _fact_confidence(anchor_precision: str) -> dict:
-    """Signals, not a fabricated probability — architecture.md section 27.8 is
-    explicit that an unexplained `confidence=0.98` shouldn't be read as 98%
-    accurate. `score` stays null/uncalibrated; review_priority is the only
-    thing meant to drive UI behavior."""
+    """Signals, not a fabricated probability: `score` stays null/uncalibrated,
+    so it must not be read as accuracy. review_priority is the only thing meant
+    to drive UI behavior."""
     is_word = anchor_precision == "word"
     return {
         "score": None,
@@ -260,8 +256,8 @@ def _finding_confidence(is_match: bool, contract_fact: dict, annex_fact: dict) -
     if "medium" in fact_priorities:
         reason_codes.append("LINE_LEVEL_ANCHOR_ONLY")
     # A difference always gets reviewed regardless of how clean the anchors
-    # were — section 27.8: "Critical money/date/MST co disagreement luon
-    # review du heuristic score cao."
+    # were — a money/date/MST disagreement must not be hidden by a high
+    # heuristic score.
     review_priority = "high" if not is_match else ("medium" if fact_priorities - {"low"} else "low")
     return {
         "score": None,
@@ -280,8 +276,8 @@ def _normalize_fact(fact_type: str, raw: str, match: re.Match) -> dict:
     if fact_type == "duration_days":
         return {"days": int(match.group(1))}
     # "date": kept as the raw matched string, not parsed into ISO — dd/mm/yyyy
-    # vs mm/dd/yyyy is genuinely ambiguous without a locale, and
-    # architecture.md section 8.3 explicitly warns against guessing that.
+    # vs mm/dd/yyyy is genuinely ambiguous without a locale; the demo does not
+    # guess.
     return {"raw": raw}
 
 
@@ -342,10 +338,9 @@ def extract_facts(snapshot: DocumentSnapshot, clauses: list[dict]) -> list[dict]
 
 
 def compare_facts(contract_facts: list[dict], annex_facts: list[dict]) -> list[dict]:
-    """Candidate generation here is "same field name" instead of the
-    keyword/embedding retrieval in architecture.md section 9.2 — fine with two
-    documents and a handful of facts each, not a stand-in for the real thing
-    at scale."""
+    """Candidate generation here is "same field name" for this small demo; not
+    production keyword/embedding retrieval, and not a stand-in for it at
+    scale."""
     by_field = {f["field"]: f for f in annex_facts}
     findings = []
     for contract_fact in contract_facts:
@@ -381,11 +376,11 @@ def compare_facts(contract_facts: list[dict], annex_facts: list[dict]) -> list[d
 def compare_facts_multi(
     contract_facts: list[dict], annexes: list[tuple[str, str, list[dict]]]
 ) -> list[dict]:
-    """Runs compare_facts() against each appendix independently (architecture.md
-    section 9.2: comparison scope is contract-vs-one-annex, never annex-vs-annex
-    implicitly) and tags every finding with which appendix it came from, so a
-    dossier with several appendices doesn't collapse them into one ambiguous
-    list. `annexes` is a list of (document_id, filename, facts)."""
+    """Runs compare_facts() against each appendix independently: scope is
+    contract-vs-one-annex, never annex-vs-annex implicitly, and every finding is
+    tagged with which appendix it came from, so a dossier with several
+    appendices doesn't collapse them into one ambiguous list. `annexes` is a
+    list of (document_id, filename, facts)."""
     findings = []
     for document_id, filename, annex_facts in annexes:
         for finding in compare_facts(contract_facts, annex_facts):

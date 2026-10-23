@@ -1,8 +1,11 @@
 # API Backend — lookup khi nối frontend
 
-Spec: **Contract Intelligence API** `1.1.0+sprint4-ai-integration` (DOC-05b + DOC-05c).  
-Đã chốt theo OpenAPI backend (envelope `{ data, meta }`, header `X-Backend-Version`).
-Hợp đồng FE-BE: **DOC-05b `v5.1.0`**, header response `X-API-Contract: v5.1.0`. 4 endpoint `/notifications` của `v1.6.0` vẫn là đề xuất, backend chưa có ([24](#24-thông-báo-cá-nhân-đề-xuất-be-chưa-có)).
+Đây là **bảng tra cứu** endpoint/shape khi frontend bỏ mock, không phải spec. Spec canonical cho
+FE-BE là **DOC-05b `v5.1.0`** ([`docs/DOC-05b-frontend-backend-api-contract.md`](../docs/DOC-05b-frontend-backend-api-contract.md));
+OpenAPI backend là nguồn request/response hiện hành.
+
+Đã chốt theo OpenAPI backend (envelope `{ data, meta }`, header `X-Backend-Version`), response header
+`X-API-Contract: v5.1.0`. 4 endpoint `/notifications` của `v1.6.0` vẫn là đề xuất, backend chưa có ([24](#24-thông-báo-cá-nhân-đề-xuất-be-chưa-có)).
 
 Từ `v2.1.0`:
 
@@ -1132,7 +1135,7 @@ Giữ mock hoặc ẩn màn cho đến khi BE bổ sung. Đừng bịa API.
 | ----------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------ |
 | Login Google / SSO / quick admin-user                                   | `LoginPage`         | Auth = Keycloak ngoài OpenAPI; API chỉ `/auth/me`                        |
 | Tổng quan: dung lượng, hoạt động tenant, số hồ sơ chia sẻ, xuất báo cáo | `BE-OVERVIEW.md`    | User list và dossier list đã nối. Các phần còn lại chưa có endpoint      |
-| Người dùng & phân quyền                                                 | `UsersPage`         | FE đã gọi. BE làm theo `BE-USER-ADMIN.md` — [18](#18-quản-lý-người-dùng) |
+| Người dùng & phân quyền                                                 | `UsersPage`         | FE đã gọi; xem [18](#18-quản-lý-người-dùng). Vận hành Keycloak: [`docs/KEYCLOAK-SETUP.md`](../docs/KEYCLOAK-SETUP.md) |
 | Được chia sẻ với tôi                                                    | Placeholder         | Không có share grant                                                     |
 | Tìm kiếm xuyên hồ sơ                                                    | Placeholder         | `GET /dossiers?q=` chỉ search **tên** dossier                            |
 | Tìm trong 1 hồ sơ (Ctrl+K)                                              | `dossierSearch.ts`  | Không có full-text / semantic search                                     |
@@ -1182,7 +1185,7 @@ Verify: [ ] happy path  [ ] 409  [ ] empty list
 ## 18. Quản lý người dùng
 
 **FE:** `UsersPage` (`/nguoi-dung-phan-quyen`), `src/api/users.ts`  
-**BE:** đã có trên OpenAPI (`/api/v1/users`…). Chi tiết vận hành Keycloak/SMTP: [`BE-USER-ADMIN.md`](./BE-USER-ADMIN.md).
+**BE:** đã có trên OpenAPI (`/api/v1/users`…). Vận hành Keycloak/SMTP: [`docs/KEYCLOAK-SETUP.md`](../docs/KEYCLOAK-SETUP.md#quản-lý-người-dùng-qua-backend-keycloak-admin-api).
 
 Browser không gọi Keycloak Admin API. Mọi thao tác đi qua backend, kèm Bearer của admin.
 
